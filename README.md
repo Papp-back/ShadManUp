@@ -18,7 +18,7 @@ To use this Laravel project, follow these steps:
 
     - Clone the repository:
         ```bash
-        git clone https://github.com/Papp-back/backEnd.git
+        git clone https://github.com/Papp-back/ShadManUp.git
 
         ```
 
