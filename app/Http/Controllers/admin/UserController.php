@@ -11,7 +11,7 @@ class UserController
  * @OA\Get(
  *     path="/users",
  *     summary="Get users with pagination",
- *     tags={"Course"},
+ *     tags={"User"},
  *     @OA\Parameter(
  *         name="per_page",
  *         in="query",
@@ -123,7 +123,7 @@ class UserController
 * @OA\Post(
 *     path="/users",
 *     summary="Store a new Course",
-*     tags={"Course"},
+*     tags={"User"},
  *         @OA\RequestBody(
  *             required=true,
  *             @OA\MediaType(
@@ -185,7 +185,7 @@ public function StoreCourse(Request $request)
 * @OA\Get(
 *     path="/users/{id}",
 *     summary="Retrieve a single course by ID",
-*     tags={"Course"},
+*     tags={"User"},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
@@ -254,7 +254,7 @@ return jsonResponse($course->withJdateHuman(), 200, true, '', []);
  * @OA\Put(
  *     path="/users/{id}",
  *     summary="Update an existing course",
- *     tags={"Course"},
+ *     tags={"User"},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -322,7 +322,7 @@ public function updateCourse($id,Request $request)
  * @OA\Post(
  *     path="/users/{id}/image",
  *     summary="Update an existing course image",
- *     tags={"Course"},
+ *     tags={"User"},
  *     security={{ "bearerAuth":{} }},
  * *     @OA\Parameter(
 *         name="id",
@@ -389,7 +389,7 @@ public function updateCourse($id,Request $request)
 * @OA\Delete(
 *     path="/users/{id}",
 *     summary="Delete a course by ID",
-*     tags={"Course"},
+*     tags={"User"},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
