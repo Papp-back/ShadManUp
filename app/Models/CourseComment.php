@@ -9,7 +9,7 @@ use App\Models\User;
 class CourseComment extends Model
 {
     use HasFactory;
-    protected $fillable = ['course_id', 'user_id', 'comment', 'like_count','show'];
+    protected $fillable = ['course_id', 'user_id', 'comment','show'];
 
     public function user()
     {

@@ -172,7 +172,7 @@ public function StoreSessionCourse(Request $request)
 *             @OA\Property(property="data", type="object"),
 *             @OA\Property(property="status", type="integer", example=200),
 *             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(property="message", type="string", example="درس وجود ندارد ."),
+*             @OA\Property(property="message", type="string", example="دروه وجود ندارد ."),
 *             @OA\Property(property="errors", type="array", @OA\Items()),
 *         ),
 *     ),
@@ -183,7 +183,7 @@ public function StoreSessionCourse(Request $request)
 public function singleSessionCourse($id,Request $request) {
     $course = CourseSession::find($id);
     if (!$course) {
-        return jsonResponse([], 200, false, 'درس وجود ندارد .', []);
+        return jsonResponse([], 200, false, 'دروه وجود ندارد .', []);
     }
     $course->section=CourseSection::with('course')->find($course->course_section_id);
     return jsonResponse($course->withJdateHuman(), 200, true, '', []);
@@ -311,7 +311,7 @@ public function updateSessionCourse($id,Request $request)
     }
     $course = CourseSession::find($id);
     if (!$course) {
-        return jsonResponse([], 404, false, 'درس پیدا نشد.', []);
+        return jsonResponse([], 404, false, 'دروه پیدا نشد.', []);
     }
     $course->update($request->all());
     return jsonResponse($course, 200, true, 'با موفقیت به‌روزرسانی شد.', []);

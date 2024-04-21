@@ -127,7 +127,7 @@ class CourseCommentController
 *             @OA\Property(property="data", type="object"),
 *             @OA\Property(property="status", type="integer", example=200),
 *             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(property="message", type="string", example="درس وجود ندارد ."),
+*             @OA\Property(property="message", type="string", example="دروه وجود ندارد ."),
 *             @OA\Property(property="errors", type="array", @OA\Items()),
 *         ),
 *     ),
@@ -138,7 +138,7 @@ class CourseCommentController
 public function singleCommentCourse($id,Request $request) {
     $course = CourseComment::with('user')->with('likes')->find($id);
     if (!$course) {
-        return jsonResponse([], 200, false, 'درس وجود ندارد .', []);
+        return jsonResponse([], 200, false, 'دروه وجود ندارد .', []);
     }
     return jsonResponse($course->withJdateHuman(), 200, true, '', []);
 }

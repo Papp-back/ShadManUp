@@ -214,7 +214,7 @@ public function StoreCourse(Request $request)
 *             @OA\Property(property="data", type="object"),
 *             @OA\Property(property="status", type="integer", example=200),
 *             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(property="message", type="string", example="درس وجود ندارد ."),
+*             @OA\Property(property="message", type="string", example="دروه وجود ندارد ."),
 *             @OA\Property(property="errors", type="array", @OA\Items()),
 *         ),
 *     ),
@@ -226,7 +226,7 @@ public function singleCourse($id,Request $request) {
 $course = Course::with('category')->with('sections')->find($id);
 
 if (!$course) {
-    return jsonResponse([], 200, false, 'درس وجود ندارد .', []);
+    return jsonResponse([], 200, false, 'دروه وجود ندارد .', []);
 }
 if (isset($course->sections[0])) {
     $course->sessions_count = $course->sections[0]->sessions()->count(); // Count sessions
@@ -309,7 +309,7 @@ public function updateCourse($id,Request $request)
 
     $course = Course::find($id);
     if (!$course) {
-        return jsonResponse([], 404, false, 'درس پیدا نشد.', []);
+        return jsonResponse([], 404, false, 'دروه پیدا نشد.', []);
     }
 
 
@@ -372,7 +372,7 @@ public function updateCourse($id,Request $request)
  
      $course = Course::find($id);
      if (!$course) {
-         return jsonResponse([], 404, false, 'درس پیدا نشد.', []);
+         return jsonResponse([], 404, false, 'دروه پیدا نشد.', []);
      }
  
      // Store the avatar

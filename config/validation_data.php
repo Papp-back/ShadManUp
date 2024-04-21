@@ -244,5 +244,27 @@ return [
             'role' => 'required',
         ],
     ],
+    'setCommentsCourse' => [
+        'messages' => [
+            'course_id.required' => 'شناسه دوره را وارد کنید',
+            'course_id.exists' => 'شناسه دوره معتبر نمی باشد .',
+            'comment.required' => 'متن نظر را وارد کنید',
+            'comment.string' => 'متن نظر باید حروف باشد',
+            
+        ],
+        'rules' => [
+            'course_id' => 'nullable|exists:courses,id',
+            'comment' => 'required|string',
+        ],
+    ],
+    'setCommentLikeCourse' => [
+        'messages' => [
+            'comment_id.required' => 'شناسه نظر را وارد کنید',
+            'comment_id.exists' => 'شناسه نظر معتبر نمی باشد .',
+        ],
+        'rules' => [
+            'comment_id' => 'nullable|exists:course_comments,id',
+        ],
+    ],
     
 ];

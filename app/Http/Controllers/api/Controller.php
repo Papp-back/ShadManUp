@@ -108,11 +108,6 @@ namespace App\Http\Controllers\api;
  *         description="The title of the course."
  *     ),
  *     @OA\Property(
- *         property="hours",
- *         type="number",
- *         description="The number of hours for the course."
- *     ),
- *     @OA\Property(
  *         property="category_id",
  *         type="integer",
  *         format="int64",
@@ -139,15 +134,25 @@ namespace App\Http\Controllers\api;
  *         description="The discount applied to the course."
  *     ),
  *     @OA\Property(
- *         property="session",
- *         type="integer",
- *         format="int64",
- *         description="The number of sessions for the course."
- *     ),
- *     @OA\Property(
  *         property="summary",
  *         type="string",
  *         description="A summary of the course content."
+ *     ),
+ *     @OA\Property(
+ *         property="total_duration_time",
+ *         type="string",
+ *         description="total duration time of the course"
+ *     ),
+ *     @OA\Property(property="comments", type="array", @OA\Items(ref="#/components/schemas/CommentCourse")),
+ *     @OA\Property(
+ *         property="sessions_count",
+ *         type="string",
+ *         description="total sessions counts of the course"
+ *     ),
+ *     @OA\Property(
+ *         property="comments_count",
+ *         type="string",
+ *         description="total comments counts of the course"
  *     ),
  *     @OA\Property(
  *         property="image",
@@ -155,7 +160,7 @@ namespace App\Http\Controllers\api;
  *         format="binary",
  *         description="The image URL for the course."
  *     ),
- *     required={"title", "hours", "category_id", "author", "description", "price", "session"}
+ *     required={"title","category_id", "author", "description", "price"}
  * )
  * 
  * @OA\Schema(
@@ -181,10 +186,10 @@ namespace App\Http\Controllers\api;
  *     @OA\Property(property="id", type="integer", format="int64", description="The unique identifier for the session"),
  *     @OA\Property(property="course_id", type="integer", format="int64", description="The ID of the course"),
  *     @OA\Property(property="user_id", type="integer", description="The ID of the user"),
- *     @OA\Property(property="like_count", type="integer", description="The like count of comment"),
  *     @OA\Property(property="show", type="integer", description="show the comment(0 is hide ,1 is show)"),
  *     @OA\Property(property="comment", type="string", description="The comment text"),
  *     @OA\Property(property="user", ref="#/components/schemas/User"),
+ *     @OA\Property(property="user_like", type="string", description="check if user like comment"),
  *     @OA\Property(
  *         property="likes",
  *         type="array",

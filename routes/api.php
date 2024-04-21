@@ -47,6 +47,9 @@ Route::prefix('v1')->group(function () {
     Route::group(['prefix' => 'courses'], function () {
         Route::get('/', [CourseController::class, 'getCourses'])->middleware('auth:api');
         Route::get('/{id}', [CourseController::class, 'singleCourse'])->middleware('auth:api');
+        Route::get('/{id}/comments', [CourseController::class, 'getCommentsCourse'])->middleware('auth:api');
+        Route::post('/{id}/comments', [CourseController::class, 'setCommentsCourse'])->middleware('auth:api');
+        Route::post('/commentlike', [CourseController::class, 'setCommentLikeCourse'])->middleware('auth:api');
     });
     
 });

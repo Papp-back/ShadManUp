@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 // use Illuminate\Database\Eloquent\Model;
 use App\Models\BaseModel as Model;
 use App\Models\CourseSection;
+use App\Models\CourseComment;
 
 class Course extends Model
 {
@@ -32,5 +33,9 @@ class Course extends Model
     public function sections()
     {
         return $this->hasMany(CourseSection::class)->with('sessions')->withCount('sessions');
+    }
+    public function comments()
+    {
+        return $this->hasMany(CourseComment::class)->with('user')->withCount('likes');
     }
 }
