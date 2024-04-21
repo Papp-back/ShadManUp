@@ -17,6 +17,10 @@ namespace App\Http\Controllers\api;
  *     url="http://localhost:8000/api/v1",
  *     description="development Server"
  * ),
+ *  @OA\Server(
+ *     url="https://shadmanup.ir/api/admin",
+ *     description="Production Server"
+ * ),
  * @OA\SecurityScheme(
  *       securityScheme="bearerAuth",
  *       in="header",
