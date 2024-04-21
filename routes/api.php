@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminCheckMiddleware;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\api\CourseController;
 use App\Http\Controllers\api\ProfileController;
 use App\Http\Controllers\api\NotificationController;
 use App\Http\Controllers\admin\AuthController as AdminAuthController;
@@ -42,6 +43,10 @@ Route::prefix('v1')->group(function () {
     Route::group(['prefix' => 'notifications'], function () {
         Route::get('/', [NotificationController::class, 'getNotifications'])->name('Notification.index');
         Route::get('/{id}', [NotificationController::class, 'singleNotification'])->name('Notification.show');
+    });
+    Route::group(['prefix' => 'courses'], function () {
+        Route::get('/', [CourseController::class, 'getCourses'])->middleware('auth:api');
+        Route::get('/{id}', [CourseController::class, 'singleCourse'])->middleware('auth:api');
     });
     
 });
