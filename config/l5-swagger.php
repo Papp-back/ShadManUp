@@ -325,7 +325,7 @@ return [
                 /*
                  * If set to true, it persists authorization data, and it would not be lost on browser close/refresh
                  */
-                'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', false),
+                'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', true),
 
                 'oauth2' => [
                     /*
@@ -352,7 +352,7 @@ return [
             /*
              * Route for Oauth2 authentication callback.
             */
-            'oauth2_callback' => 'api/oauth2-callback',
+            'oauth2_callback' => 'admin/api/oauth2-callback',
 
             /*
              * Middleware allows to prevent unexpected access to API documentation
@@ -577,7 +577,7 @@ return [
                 /*
                  * If set to true, it persists authorization data, and it would not be lost on browser close/refresh
                  */
-                'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', false),
+                'persist_authorization' => env('L5_SWAGGER_UI_PERSIST_AUTHORIZATION', true),
 
                 'oauth2' => [
                     /*
