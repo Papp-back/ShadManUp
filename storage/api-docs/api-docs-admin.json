@@ -13,10 +13,6 @@
         {
             "url": "http://localhost:8000/api/admin",
             "description": "development Server"
-        },
-        {
-            "url": "https://shadmanup.ir/api/admin",
-            "description": "Production Server"
         }
     ],
     "paths": {
@@ -3474,7 +3470,7 @@
         "/users": {
             "get": {
                 "tags": [
-                    "User"
+                    "Course"
                 ],
                 "summary": "Get users with pagination",
                 "operationId": "d718822f139abb20d888172e1f0a8b21",
@@ -3601,7 +3597,7 @@
             },
             "post": {
                 "tags": [
-                    "User"
+                    "Course"
                 ],
                 "summary": "Store a new Course",
                 "operationId": "418dc1c8c40fbf50ddd5af7d9ae7a4e0",
@@ -3723,7 +3719,7 @@
         "/users/{id}": {
             "get": {
                 "tags": [
-                    "User"
+                    "Course"
                 ],
                 "summary": "Retrieve a single course by ID",
                 "operationId": "0e2df8d0e86e96f680687ecfde05fcd8",
@@ -3813,7 +3809,7 @@
             },
             "put": {
                 "tags": [
-                    "User"
+                    "Course"
                 ],
                 "summary": "Update an existing course",
                 "operationId": "75ea9e5ed240a0d3e25723fdbacab2cb",
@@ -3920,7 +3916,7 @@
             },
             "delete": {
                 "tags": [
-                    "User"
+                    "Course"
                 ],
                 "summary": "Delete a course by ID",
                 "operationId": "192c3701eead25ae7a53b6c2b49febde",
@@ -4014,7 +4010,7 @@
         "/users/{id}/image": {
             "post": {
                 "tags": [
-                    "User"
+                    "Course"
                 ],
                 "summary": "Update an existing course image",
                 "operationId": "eebc107d1a2eb9dbd0daa90dbd2b34f4",
