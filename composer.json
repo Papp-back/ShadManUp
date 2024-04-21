@@ -17,6 +17,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "morilog/jalali": "^3.4",
+        "pishran/zarinpal": "^4.3",
         "tymon/jwt-auth": "^2.1"
     },
     "require-dev": {
