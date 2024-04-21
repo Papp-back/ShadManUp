@@ -329,6 +329,7 @@ class AuthController extends Controller
     public function userDetail()
     {
         $user=auth('api')->user();
+        $user=User::with('referrer')->with('referrals')->with('notifications')->find($user->id);
         if ($user->wallet_expire !== null) {
             $walletExpire = Carbon::parse($user->wallet_expire);
             $currentTime = Carbon::now();
@@ -355,6 +356,7 @@ class AuthController extends Controller
     {
         
 		$user=auth('api')->user();
+        $user=User::with('referrer')->with('referrals')->with('notifications')->find($user->id);
         if ($user->wallet_expire !== null) {
             $walletExpire = Carbon::parse($user->wallet_expire);
             $currentTime = Carbon::now();
