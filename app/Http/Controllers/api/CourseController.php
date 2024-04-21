@@ -290,11 +290,17 @@ public function getCommentsCourse($id,Request $request) {
  *      path="/courses/{id}/comments",
  *     summary="Store a new comment for a course",
  *     tags={"Course"},
+ *       @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID of the course",
+ *         required=true,
+ *         @OA\Schema(type="integer", format="int64")
+ *     ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             required={"course_id","comment"},
- *             @OA\Property(property="course_id", type="integer", example=1),
+ *             required={"comment"},
  *             @OA\Property(property="comment", type="integer", example="Lorem ipsum dolor sit amet, consectetur adip")
  *         )
  *     ),
@@ -338,12 +344,13 @@ public function setCommentsCourse($id,Request $request) {
         return $validator;
     }
     $user_id=auth('api')->user()->id;
-    $comment_user = CourseComment::where('course_id',$id)->where('user_id',$id)->first();
+    $comment_user = CourseComment::where('course_id',$id)->where('user_id',$user_id)->first();
     if ($comment_user) {
         return jsonResponse([], 400, false, 'شما یک نظر برای این دوره ثبت کرده اید.', []);
     }
     $commentData=$request->all();
     $commentData['user_id']=$user_id;
+    $commentData['course_id']=$id;
     $comment=CourseComment::create($commentData);
     
     return jsonResponse($comment, 200, true, '', []);

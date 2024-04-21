@@ -246,14 +246,11 @@ return [
     ],
     'setCommentsCourse' => [
         'messages' => [
-            'course_id.required' => 'شناسه دوره را وارد کنید',
-            'course_id.exists' => 'شناسه دوره معتبر نمی باشد .',
             'comment.required' => 'متن نظر را وارد کنید',
             'comment.string' => 'متن نظر باید حروف باشد',
             
         ],
         'rules' => [
-            'course_id' => 'nullable|exists:courses,id',
             'comment' => 'required|string',
         ],
     ],
