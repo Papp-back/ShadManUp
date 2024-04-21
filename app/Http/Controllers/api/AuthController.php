@@ -348,6 +348,7 @@ class AuthController extends Controller
         unset($user['login_level']);
         unset($user['phone_code']);
         unset($user['phone_code_send_time']);
+        $user->avatar=$user->avatar?url('storage/'.$user->avatar):''; 
         return jsonResponse($user, 200, true,'', []);
     }
     protected function respondWithToken($token)
@@ -368,6 +369,7 @@ class AuthController extends Controller
         $wallet_gift=floatval($user['wallet_gift'])??0;
         $wallet=floatval($user['wallet'])??0;
         $user['wallet']=$wallet_gift+$wallet;
+        $user->avatar=$user->avatar?url('storage/'.$user->avatar):''; 
         unset($user['wallet_gift']);
         unset($user['wallet_expire']);
         return jsonResponse([
