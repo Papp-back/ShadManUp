@@ -216,5 +216,33 @@ return [
             
         ],
     ],
+    'UpdateUser' => [
+        'messages' => [
+            'avatar.image' => 'تصویر باید یک تصویر باشد.',
+            'avatar.mimes' => 'فرمت تصویر باید jpeg، png، jpg یا gif باشد.',
+            'avatar.max' => 'حجم تصویر نباید بیشتر از ۲ مگابایت باشد.',
+            'cellphone.required' => 'شماره موبایل را وارد کنید.',
+            'cellphone.regex' => 'فرمت شماره موبایل نامعتبر است.',
+            'cellphone.unique' => 'این شماره موبایل قبلاً ثبت شده است.',
+            'email.required' => 'آدرس ایمیل را وارد کنید.',
+            'email.email' => 'فرمت آدرس ایمیل نامعتبر است.',
+            'email.unique' => 'این آدرس ایمیل قبلاً ثبت شده است.',
+            'firstname.required' => 'نام را وارد کنید.',
+            'lastname.required' => 'نام خانوادگی را وارد کنید.',
+            'national_code.required' => 'کد ملی را وارد کنید.',
+            'national_code.regex' => 'فرمت کد ملی نامعتبر است.',
+            'national_code.unique' => 'این کد ملی قبلاً ثبت شده است.',
+            'role.required' => 'نقش کاربر را انتخاب کنید.',
+        ],
+        'rules' => [
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'cellphone' => 'required|string|unique:users,cellphone',
+            'email' => 'required|email|unique:users,email',
+            'firstname' => 'required|string',
+            'lastname' => 'required|string',
+            'national_code' => 'required|string',
+            'role' => 'required',
+        ],
+    ],
     
 ];

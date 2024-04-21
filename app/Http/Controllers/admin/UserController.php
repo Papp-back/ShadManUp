@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller\admin;
+use App\Models\User;
 
-class UserController
+
+class UserController extends Controller
 {
      
     /**
@@ -32,13 +35,6 @@ class UserController
  *         description="Search query",
  *         required=false,
  *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="category_id",
- *         in="query",
- *         description="category_id query",
- *         required=false,
- *         @OA\Schema(type="integer")
  *     ),
  *     @OA\Response(
  *         response=200,
@@ -74,131 +70,46 @@ class UserController
     $perPage = $request->input('per_page', 10);
     $page = $request->input('page', 1);
     $search = $request->input('search');
-    $category_id = $request->input('category_id');
     // Start building the query
-    $query = Course::query()->with('category')->with('sections');
-    if ($category_id) {
-        $query->where('category_id', $category_id);
-    }
+    $query = User::query()->with('referrer')->with('referrals')->with('notifications');
     if ($search) {
         $query->where(function ($q) use ($search) {
-            $q->where('title', 'like', '%' . $search . '%');
+            $q->where('firstname', 'like', '%' . $search . '%');
+            $q->orWhere('lastname', 'like', '%' . $search . '%');
+            $q->orWhere('cellphone', 'like', '%' . $search . '%');
+            $q->orWhere('national_code', 'like', '%' . $search . '%');
             
         });
     }
     // Execute the query and paginate the results
     $users = $query->paginate($perPage, ['*'], 'page', $page);
-    $transformedUsers = $users->map(function ($course,$index) {
-        $course->image=url('storage/'.$course->image);
-        if (isset($course->sections[0])) {
-            $course->sessions_count = $course->sections[0]->sessions()->count(); // Count sessions
-            $totalDurationMinutes = $course->sections[0]->sessions()->sum('duration_minutes'); // Sum duration_minutes
-            $course->total_duration_time = convertToTime($totalDurationMinutes); // Convert to human-readable time
-            if ($totalDurationMinutes) {
-               
-                $course->sections[$index]->sessions->map(function ($session) {
-                    // Convert duration_minutes to HH:MM:SS format
-                    $session->duration_minutes = convertToTime($session->duration_minutes);
-                    $session->file_size = formatFileSize($session->file_size);
-                    return $session;
-                });
-            }
-            $course->sections->each(function ($section) {
-                return $section->prettifyPrice();
-            });
-        } else {
-            $course->sessions_count = 0;
-            $course->total_duration_time = '0';
-        }
-       
-    
-        
-        return $course->prettifyPrice()->withJdateHuman();
+    $transformedUsers = $users->map(function ($user,$index) {
+        $user->avatar=$user->avatar?url('storage/'.$user->avatar):'';    
+        return $user->withJdateHuman();
     });
 
   
     return jRWithPagination($users, $transformedUsers, 200, true, '', []);
 }
-/**
-* @OA\Post(
-*     path="/users",
-*     summary="Store a new Course",
-*     tags={"User"},
- *         @OA\RequestBody(
- *             required=true,
- *             @OA\MediaType(
- *                 mediaType="multipart/form-data",
- *                 @OA\Schema(
- *                     required={"title", "category_id", "author", "description", "price", "image"},
- *                     @OA\Property(property="title", type="string", example="Course Title"),
- *                     @OA\Property(property="category_id", type="integer", format="int64", example=1),
- *                     @OA\Property(property="author", type="string", example="John Doe"),
- *                     @OA\Property(property="description", type="string", example="Course description"),
- *                     @OA\Property(property="price", type="number", format="float", example=50.99),
- *                     @OA\Property(property="discount", type="number", format="float", example=10.0),
- *                     @OA\Property(property="session", type="integer", format="int32", example=20),
- *                     @OA\Property(property="summary", type="string", example="Course summary"),
- *                     @OA\Property(property="image", type="string", format="binary"),
- *                 ),
- *             ),
- *         ),
-*     @OA\Response(
-*         response=200,
-*         description="Course created successfully",
-*         @OA\JsonContent(
-*             type="object",
-*              @OA\Property(property="data", type="object", ref="#/components/schemas/Course"),
-*             @OA\Property(property="status", type="integer", example=200),
-*             @OA\Property(property="success", type="boolean", example=true),
-*             @OA\Property(property="message", type="string", example="با موفقیت ایجاد شد ."),
-*             @OA\Property(property="errors", type="array", @OA\Items()),
-*         ),
-*     ),
-*     @OA\Response(
-*         response=422,
-*         description="Validation errors",
-*         @OA\JsonContent(
-*             type="object",
-*             @OA\Property(property="errors", type="object", ref="#/components/schemas/ValidationError"),
-*         ),
-*     ),
-*     security={{"bearerAuth": {}}},
-* )
-*/
-
-public function StoreCourse(Request $request)
-{
-    $validator=ValidationFeilds($request,__FUNCTION__);
-    if ($validator) {
-        return $validator;
-    }
-    // Handle image upload
-    $imagePath = $request->file('image')->store('users', 'public');
-
-    // Create the course
-    $course = Course::create(array_merge($request->all(), ['image' => $imagePath]));
-
-    return jsonResponse($course, 200, true,  'با موفقیت ایجاد شد .', []);
-}
 
 /**
 * @OA\Get(
 *     path="/users/{id}",
-*     summary="Retrieve a single course by ID",
+*     summary="Retrieve a single user by ID",
 *     tags={"User"},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
-*         description="ID of the category",
+*         description="ID of the user",
 *         required=true,
 *         @OA\Schema(type="integer", format="int64")
 *     ),
 *     @OA\Response(
 *         response=200,
-*         description="Course retrieved successfully",
+*         description="User retrieved successfully",
 *         @OA\JsonContent(
 *             type="object",
-*             @OA\Property(property="data", ref="#/components/schemas/Course"),
+*             @OA\Property(property="data", ref="#/components/schemas/User"),
 *             @OA\Property(property="status", type="integer", example=200),
 *             @OA\Property(property="success", type="boolean", example=true),
 *             @OA\Property(property="message", type="string", example=""),
@@ -207,13 +118,13 @@ public function StoreCourse(Request $request)
 *     ),
 *     @OA\Response(
 *         response=404,
-*         description="Course not found",
+*         description="user not found",
 *         @OA\JsonContent(
 *             type="object",
 *             @OA\Property(property="data", type="object"),
 *             @OA\Property(property="status", type="integer", example=200),
 *             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(property="message", type="string", example="درس وجود ندارد ."),
+*             @OA\Property(property="message", type="string", example="کاربر وجود ندارد ."),
 *             @OA\Property(property="errors", type="array", @OA\Items()),
 *         ),
 *     ),
@@ -221,44 +132,24 @@ public function StoreCourse(Request $request)
 * )
 */
 
-public function singleCourse($id,Request $request) {
-$course = Course::with('category')->with('sections')->find($id);
+public function singleUser($id,Request $request) {
+$user = User::with('referrer')->with('referrals')->with('notifications')->find($id);
 
-if (!$course) {
-    return jsonResponse([], 200, false, 'درس وجود ندارد .', []);
+if (!$user) {
+    return jsonResponse([], 200, false, 'کاربر وجود ندارد .', []);
 }
-if (isset($course->sections[0])) {
-    $course->sessions_count = $course->sections[0]->sessions()->count(); // Count sessions
-    $totalDurationMinutes = $course->sections[0]->sessions()->sum('duration_minutes'); // Sum duration_minutes
-    $course->total_duration_time = convertToTime($totalDurationMinutes); // Convert to human-readable time
-    if ($totalDurationMinutes) {
-        $course->sections->map(function ($sec){
-            $sec->sessions->map(function ($session) {
-                $session->duration_minutes = convertToTime($session->duration_minutes);
-                $session->file_size = formatFileSize($session->file_size);
-                return $session;
-            });
-        });
-    }
-    $course->sections->each(function ($section) {
-        return $section->prettifyPrice();
-    });
-} else {
-    $course->sessions_count = 0;
-    $course->total_duration_time = '0';
-}
-$course->image=url('storage/'.$course->image);
-return jsonResponse($course->withJdateHuman(), 200, true, '', []);
+$user->avatar=$user->avatar?url('storage/'.$user->avatar):'';
+return jsonResponse($user->withJdateHuman(), 200, true, '', []);
 }
 /**
  * @OA\Put(
  *     path="/users/{id}",
- *     summary="Update an existing course",
+ *     summary="Update an existing user",
  *     tags={"User"},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID of the course to update",
+ *         description="ID of the user to update",
  *         required=true,
  *         @OA\Schema(
  *             type="integer",
@@ -268,15 +159,14 @@ return jsonResponse($course->withJdateHuman(), 200, true, '', []);
  *     ),
  *      @OA\RequestBody(
  *         required=true,
- *         @OA\JsonContent(
- *              required={"title", "category_id", "author", "description", "price"},
- *             @OA\Property(property="title", type="string", example="Updated Course Title"),
- *             @OA\Property(property="category_id", type="integer", format="int64", example=2),
- *             @OA\Property(property="author", type="string", example="Jane Doe"),
- *             @OA\Property(property="description", type="string", example="Updated course description"),
- *             @OA\Property(property="price", type="number", format="float", example=69.99),
- *             @OA\Property(property="discount", type="number", format="float", example=20.0),
- *             @OA\Property(property="summary", type="string", example="Updated course summary"),
+  *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="cellphone", type="string", description="User's cellphone number"),
+ *             @OA\Property(property="email", type="string", format="email", description="User's email address"),
+ *             @OA\Property(property="firstname", type="string", description="User's first name"),
+ *             @OA\Property(property="lastname", type="string", description="User's last name"),
+ *             @OA\Property(property="national_code", type="string", description="User's national code"),
+ *             @OA\Property(property="role", type="integer", description="User's role (admin will be 1 or user will be 0)")
  *         )
  *     ),
  *     @OA\Response(
@@ -299,107 +189,41 @@ return jsonResponse($course->withJdateHuman(), 200, true, '', []);
  */
 
 
-public function updateCourse($id,Request $request)
+public function updateUser($id,Request $request)
 {
     $validator = ValidationFeilds($request, __FUNCTION__);
     if ($validator) {
         return $validator;
     }
 
-    $course = Course::find($id);
-    if (!$course) {
-        return jsonResponse([], 404, false, 'درس پیدا نشد.', []);
+    $user = User::find($id);
+    if (!$user) {
+        return jsonResponse([], 404, false, 'کاربر پیدا نشد.', []);
     }
 
 
-
+    $user->login=$request->input('cellphone');
     // Update course details with other fields
-    $course->update($request->all());
+    $user->update($request->all());
 
-    return jsonResponse($course, 200, true, 'با موفقیت به‌روزرسانی شد.', []);
+    return jsonResponse($user, 200, true, 'با موفقیت به‌روزرسانی شد.', []);
 }
-  /**
- * @OA\Post(
- *     path="/users/{id}/image",
- *     summary="Update an existing course image",
- *     tags={"User"},
- *     security={{ "bearerAuth":{} }},
- * *     @OA\Parameter(
-*         name="id",
-*         in="path",
-*         description="ID of the course",
-*         required=true,
-*         @OA\Schema(type="integer", format="int64")
-*     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 required={"image"},
- *                 @OA\Property(property="image", type="string", format="binary")
- *             )
- *         )
- *     ),
- * 
- *     @OA\Response(
- *         response=200,
- *         description="Successful operation",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="با موفقیت بروزرسانی شد."),
- *             @OA\Property(property="avatar", type="string", example="http://example.com/storage/course/course_1.jpg")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Validation error or image not provided",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="تصویری ارسال نشده است")
- *         )
- *     )
- * )
- */
 
- public function updateCourseImage($id,Request $request)
- {
-     $validator = ValidationFeilds($request, __FUNCTION__);
-     if ($validator) {
-         return $validator;
-     }
- 
-     $course = Course::find($id);
-     if (!$course) {
-         return jsonResponse([], 404, false, 'درس پیدا نشد.', []);
-     }
- 
-     // Store the avatar
-     if ($course->image) {
-        Storage::delete($course->image);
-    }
-
-    // Store the new image
-    $imagePath = $request->file('image')->store('users', 'public');
-    $course->image = $imagePath;
-    $course->save();
-    return jsonResponse(['url' => url('storage/' . $imagePath)], 200, true, 'با موفقیت بروزرسانی شد.', []);
- }
 /**
 * @OA\Delete(
 *     path="/users/{id}",
-*     summary="Delete a course by ID",
+*     summary="Delete a user by ID",
 *     tags={"User"},
 *     @OA\Parameter(
 *         name="id",
 *         in="path",
-*         description="ID of the course",
+*         description="ID of the user",
 *         required=true,
 *         @OA\Schema(type="integer", format="int64")
 *     ),
 *     @OA\Response(
 *         response=200,
-*         description="course deleted successfully",
+*         description="user deleted successfully",
 *         @OA\JsonContent(
 *             type="object",
 *             @OA\Property(property="data", type="object"),
@@ -411,13 +235,13 @@ public function updateCourse($id,Request $request)
 *     ),
 *     @OA\Response(
 *         response=404,
-*         description="course not found",
+*         description="user not found",
 *         @OA\JsonContent(
 *             type="object",
 *             @OA\Property(property="data", type="object"),
 *             @OA\Property(property="status", type="integer", example=404),
 *             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(property="message", type="string", example="آیتم وجود ندارد ."),
+*             @OA\Property(property="message", type="string", example="کاربر وجود ندارد ."),
 *             @OA\Property(property="errors", type="array", @OA\Items(type="string")),
 *         ),
 *     ),
@@ -425,13 +249,13 @@ public function updateCourse($id,Request $request)
 * )
 */
 
-public function destroyCourse($id,Request $request) {
-    $course = Category::find($id);
-    if (!$course) {
-        return jsonResponse([], 404, false, 'آیتم وجود ندارد .', []);
+public function destroyUser($id,Request $request) {
+    $user = User::find($id);
+    if (!$user) {
+        return jsonResponse([], 404, false, 'کاربر وجود ندارد .', []);
     }
     
-    $course->delete();
+    $user->delete();
     return jsonResponse([], 200, true, 'با موفقیت حذف شد.', []);
 }
 }

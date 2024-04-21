@@ -12,6 +12,7 @@ use App\Http\Controllers\admin\CourseSessionController as AdminCourseSessionCont
 use App\Http\Controllers\admin\CourseSectionController as AdminCourseSectionController;
 use App\Http\Controllers\admin\CourseCommentController as AdminCourseCommentController;
 use App\Http\Controllers\admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\admin\UserController as AdminUserController;
 
 
 
@@ -35,6 +36,10 @@ Route::prefix('v1')->group(function () {
     Route::group(['prefix' => 'category'], function ($router) {
         Route::post('save-avatar', [ProfileController::class,'saveAvatar'])->middleware('auth:api');
         Route::put('update', [ProfileController::class, 'updateUserData'])->middleware('auth:api');
+    });
+    Route::group(['prefix' => 'notifications'], function () {
+        Route::get('/', [NotificationController::class, 'getNotifications'])->name('Notification.index');
+        Route::get('/{id}', [NotificationController::class, 'singleNotification'])->name('Notification.show');
     });
     
 });
@@ -86,7 +91,11 @@ Route::prefix('admin')->group(function () {
         Route::get('/{id}', [AdminNotificationController::class, 'singleNotification'])->name('Notification.show');
         Route::put('/{id}', [AdminNotificationController::class, 'updateNotification'])->name('Notification.update');
         Route::delete('/{id}', [AdminNotificationController::class, 'destroyNotification'])->name('Notification.destroy');
-        Route::patch('/{id}/read', [AdminNotificationController::class, 'ReadNotification'])->name('Notification.ReadNotification');
-        Route::patch('/{id}/unread', [AdminNotificationController::class, 'InreadNotification'])->name('Notification.InreadNotification');
+    });
+    Route::group(['prefix' => 'users', 'middleware' => ['auth:admin',AdminCheckMiddleware::class]], function () {
+        Route::get('/', [AdminUserController::class, 'getUsers'])->name('Users.index');
+        Route::get('/{id}', [AdminUserController::class, 'singleUser'])->name('Users.show');
+        Route::put('/{id}', [AdminUserController::class, 'updateUser'])->name('Users.update');
+        Route::delete('/{id}', [AdminUserController::class, 'destroyUser'])->name('Users.destroy');
     });
 });

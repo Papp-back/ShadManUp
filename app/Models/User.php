@@ -7,15 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\models\User;
+use App\models\Notification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-
+use App\Traits\JalaliDateTrait;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable,JalaliDateTrait;
     
     protected $fillable = [
         'avatar',
@@ -101,6 +102,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(User::class, 'referral');
     }
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
      /**
      * Check if the referrer of the user exists.
      */
@@ -125,5 +130,27 @@ class User extends Authenticatable implements JWTSubject
             $referrerCode = $referrer->referrer; // Update referrer code for the next iteration
         }
         return $level;
+    }
+    public function withJdate()
+    {
+        $array = parent::toArray();
+
+        $array['jcreated_at'] = $this->getJCreatedAtAttribute();
+        $array['jupdated_at'] = $this->getJUpdatedAtAttribute();
+       
+
+        return $array;
+    }
+    public function withJdateHuman()
+    {
+        $array = parent::toArray();
+        $array['jcreated_at'] = $this->getJCreatedAtAttribute();
+        $array['jupdated_at'] = $this->getJUpdatedAtAttribute();
+        $array['created_at_for_humans'] = $this->getCreatedAtForHumansAttribute();
+        $array['updated_at_for_humans'] = $this->getUpdatedAtForHumansAttribute();
+        $array['deleted_at_for_humans'] = $this->getDeletedAtForHumansAttribute();
+       
+
+        return $array;
     }
 }
