@@ -10,7 +10,7 @@ class NotificationController
  * @OA\Get(
  *     path="/notifications",
  *     summary="Get notifications with pagination",
- *     tags={"Notifications"},
+ *     tags={"Notification"},
  *     @OA\Parameter(
  *         name="per_page",
  *         in="query",
@@ -44,7 +44,7 @@ class NotificationController
  *         in="query",
  *         description="Filter notifications by read status (0 for unread, 1 for read)",
  *         required=false,
- *         @OA\Schema(type="boolean", default=0)
+ *         @OA\Schema(type="integer", default=0)
  *     ),
  *     @OA\Response(
  *         response=200,
@@ -114,9 +114,9 @@ class NotificationController
  *         required=true,
  *         description="Notification data",
  *         @OA\JsonContent(
- *             @OA\Property(property="user_id", type="integer", description="The ID of the user to whom the notification belongs"),
- *             @OA\Property(property="title", type="string", description="The title of the notification"),
- *             @OA\Property(property="content", type="string", description="The content of the notification"),
+ *             @OA\Property(property="user_id", type="integer",example="1", description="The ID of the user to whom the notification belongs"),
+ *             @OA\Property(property="title", type="string", example="Lorem ipsum", description="The title of the notification"),
+ *             @OA\Property(property="content", type="string",example="Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime mollitia,molestiae quas vel sint commodi repudiandae consequuntur voluptatum laborum numquam blanditiis harum quisquam eius sed odit fugiat iusto fuga praesentium optio, eaque rerum!", description="The content of the notification"),
  *             @OA\Property(property="read", type="boolean", description="Indicates whether the notification has been read or not", example=false),
  *         ),
  *     ),

@@ -201,6 +201,7 @@ return [
     'StoreNotification' => [
         'messages' => [
             'user_id.required' => 'شناسه کاربر را وارد کنید.',
+            'user_id.exists' => 'کاربری با این شناسه وجود ندارد!',
             'user_id.integer' => 'شناسه کاربر باید از نوع عدد صحیح باشد.',
             'title.required' => 'عنوان پیام را وارد کنید.',
             'content.required' => 'متن پیام را وارد کنید.',
@@ -208,7 +209,7 @@ return [
             'title.string' => 'متن پیام باید از نوع رشته باشد.',
         ],
         'rules' => [
-            'user_id' => 'required|integer',
+            'user_id' => 'required|integer|exists:users,id',
             'title' => 'required|string',
             'content' => 'required|string',
             'read'=>'nullable'
