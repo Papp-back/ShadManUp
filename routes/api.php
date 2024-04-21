@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminCheckMiddleware;
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\api\ProfileController;
 use App\Http\Controllers\api\NotificationController;
 use App\Http\Controllers\admin\AuthController as AdminAuthController;
@@ -28,7 +29,7 @@ Route::prefix('v1')->group(function () {
     });
     Route::group(['prefix' => 'user'], function ($router) {
         Route::get('detail', [AuthController::class,'userDetail'])->middleware('auth:api');
-        
+        Route::get('/notifications', [UserController::class, 'userNotifications'])->middleware('auth:api');
     });
     Route::group(['prefix' => 'profile'], function ($router) {
         Route::post('save-avatar', [ProfileController::class,'saveAvatar'])->middleware('auth:api');
