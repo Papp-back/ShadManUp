@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\AdminCheckMiddleware;
 use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\api\PaymentController;
 use App\Http\Controllers\api\CourseController;
 use App\Http\Controllers\api\ProfileController;
 use App\Http\Controllers\api\NotificationController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\admin\UserController as AdminUserController;
 
 
 Route::prefix('v1')->group(function () {
+    Route::get('/payment/verify', [PaymentController::class,'verifyPayment']);
     Route::group(['prefix' => 'auth'], function ($router) {
         Route::post('login', [AuthController::class,'login'])->name('login');
         Route::get('login', [AuthController::class,'loginapp']);
@@ -50,8 +52,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/{id}/comments', [CourseController::class, 'getCommentsCourse'])->middleware('auth:api');
         Route::post('/{id}/comments', [CourseController::class, 'setCommentsCourse'])->middleware('auth:api');
         Route::post('/commentlike', [CourseController::class, 'setCommentLikeCourse'])->middleware('auth:api');
+        Route::post('/{id}/payment', [CourseController::class, 'setpaymentCourse'])->middleware('auth:api');
     });
-    
+
 });
 Route::prefix('admin')->group(function () {
     Route::group(['prefix' => 'auth'], function ($router) {

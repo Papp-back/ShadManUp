@@ -43,6 +43,7 @@ class BaseModel extends Model
 
         $this->price_prettified=number_format(floatval($this->price), 0, '.', ',');
         $this->discounted_prettified=number_format(floatval($this->discount), 0, '.', ',');
+        $this->final_price_prettified=number_format(floatval($this->price)-floatval($this->discount), 0, '.', ',');
         return $this;
     }
 }

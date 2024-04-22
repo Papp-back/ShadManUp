@@ -134,6 +134,11 @@ namespace App\Http\Controllers\api;
  *         description="The discount applied to the course."
  *     ),
  *     @OA\Property(
+ *         property="final_price",
+ *         type="number",
+ *         description="The total price of sections course."
+ *     ),
+ *     @OA\Property(
  *         property="summary",
  *         type="string",
  *         description="A summary of the course content."
@@ -153,6 +158,16 @@ namespace App\Http\Controllers\api;
  *         property="comments_count",
  *         type="string",
  *         description="total comments counts of the course"
+ *     ),
+ *     @OA\Property(
+ *         property="status",
+ *         type="string",
+ *         description="if status is bought it mean that the course is bought from user if is empty it means that the course not buy from user"
+ *     ),
+ *     @OA\Property(
+ *         property="available_for_purchase",
+ *         type="string",
+ *         description="The attribute signifies whether an item or product is currently accessible for purchase. If this attribute is set to true, it means that the item is currently available for customers to buy. Conversely, if it is set to false, it indicates that the item is not currently available for purchase. "
  *     ),
  *     @OA\Property(
  *         property="image",
@@ -237,6 +252,22 @@ namespace App\Http\Controllers\api;
  *     @OA\Property(property="description", type="string", description="The description of the session"),
  *     @OA\Property(property="created_at", type="string", format="date-time", description="The datetime when the session was created"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", description="The datetime when the session was last updated"),
+ * )
+ * @OA\Schema(
+ *     schema="Payment",
+ *     title="Payment",
+ *     description="Schema for a payment",
+ *     @OA\Property(property="id", type="integer", format="int64", description="The unique identifier for the payment"),
+ *     @OA\Property(property="user_id", type="integer", format="int64", description="The ID of the user making the payment"),
+ *     @OA\Property(property="course_id", type="integer", format="int64", description="The ID of the course being paid for"),
+ *     @OA\Property(property="paytype", type="string", description="The payment type ('section' or 'course')(course when used if user want to pay for course ,section when used if user want to pay for only a course section)"),
+ *     @OA\Property(property="copoun_id", type="string", nullable=true, description="The ID of the coupon used for the payment"),
+ *     @OA\Property(property="section_id", type="string", nullable=true, description="The ID of the section (optional)(it will be integer id of course section when user want to pay for only a section of course(paytype is equal to 'section'))(it will be null when user want to pay for course (paytype is equal to 'course'))"),
+ *     @OA\Property(property="Authority", type="string", description="The authority of the payment"),
+ *     @OA\Property(property="StartPay", type="string", description="The start page of the payment that links to the zarinpal page"),
+ *     @OA\Property(property="pay", type="integer", format="int32", description="check if the payment succeeded(1 will be successful and 0 will be rejected)"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", description="The datetime when the payment was created"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", description="The datetime when the payment was last updated"),
  * )
  */
 
