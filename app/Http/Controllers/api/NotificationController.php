@@ -82,6 +82,9 @@ class NotificationController
     // Execute the query and paginate the results
     $notifications = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedNotification = $notifications->map(function ($notification) {
+        $nofif=Notification::find($notification->id);
+        $nofif->read=1;
+        $notif->save();
         return $notification->withJdateHuman();
     });
     return jRWithPagination($notifications, $transformedNotification, 200, true, '', []);
