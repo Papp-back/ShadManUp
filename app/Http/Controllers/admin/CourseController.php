@@ -130,11 +130,14 @@ class CourseController extends Controller
  *             @OA\MediaType(
  *                 mediaType="multipart/form-data",
  *                 @OA\Schema(
- *                     required={"title", "category_id", "author", "description", "image"},
+ *                     required={"title", "category_id", "author", "description", "price", "image"},
  *                     @OA\Property(property="title", type="string", example="Course Title"),
  *                     @OA\Property(property="category_id", type="integer", format="int64", example=1),
  *                     @OA\Property(property="author", type="string", example="John Doe"),
  *                     @OA\Property(property="description", type="string", example="Course description"),
+ *                     @OA\Property(property="price", type="number", format="float", example=50.99),
+ *                     @OA\Property(property="discount", type="number", format="float", example=10.0),
+ *                     @OA\Property(property="session", type="integer", format="int32", example=20),
  *                     @OA\Property(property="summary", type="string", example="Course summary"),
  *                     @OA\Property(property="image", type="string", format="binary"),
  *                 ),
@@ -267,11 +270,13 @@ return jsonResponse($course->withJdateHuman(), 200, true, '', []);
  *      @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *              required={"title", "category_id", "author", "description"},
+ *              required={"title", "category_id", "author", "description", "price"},
  *             @OA\Property(property="title", type="string", example="Updated Course Title"),
  *             @OA\Property(property="category_id", type="integer", format="int64", example=2),
  *             @OA\Property(property="author", type="string", example="Jane Doe"),
  *             @OA\Property(property="description", type="string", example="Updated course description"),
+ *             @OA\Property(property="price", type="number", format="float", example=69.99),
+ *             @OA\Property(property="discount", type="number", format="float", example=20.0),
  *             @OA\Property(property="summary", type="string", example="Updated course summary"),
  *         )
  *     ),
