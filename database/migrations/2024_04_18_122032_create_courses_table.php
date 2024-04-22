@@ -19,8 +19,8 @@ return new class extends Migration
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->string('author');
             $table->text('description');
-            $table->decimal('price', 10, 2)->default(0.00);
-            $table->decimal('discount', 10, 2)->default(0.00);
+            // $table->decimal('price', 10, 2)->default(0.00);
+            // $table->decimal('discount', 10, 2)->default(0.00);
             $table->text('summary')->nullable();
             $table->timestamps();
         });
