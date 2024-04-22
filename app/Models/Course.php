@@ -16,8 +16,8 @@ class Course extends Model
         'category_id',
         'author',
         'description',
-        'price',
-        'discount',
+        // 'price',
+        // 'discount',
         'summary',
         'image',
     ];
