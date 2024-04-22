@@ -18,7 +18,7 @@ namespace App\Http\Controllers\admin;
  *     description="development Server"
  * ),
 * @OA\Server(
- *     url="http://api.shadmanup.ir/api/admin",
+ *     url="https://api.shadmanup.ir/api/admin",
  *     description="Production Server"
  * ),
  * @OA\SecurityScheme(
