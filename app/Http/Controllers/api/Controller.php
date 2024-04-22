@@ -310,6 +310,38 @@ namespace App\Http\Controllers\api;
  *         example="2022-04-25 10:15:00"
  *     )
  * )
+ * 
+ * @OA\Schema(
+ *     schema="AboutUs",
+ *     title="About Us",
+ *     description="About Us model",
+ *     @OA\Property(
+ *         property="id",
+ *         type="integer",
+ *         description="The unique identifier for the About Us content",
+ *         example=1
+ *     ),
+ *     @OA\Property(
+ *         property="content",
+ *         type="string",
+ *         description="The content of the About Us section",
+ *         example="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+ *     ),
+ *     @OA\Property(
+ *         property="created_at",
+ *         type="string",
+ *         format="date-time",
+ *         description="The date and time when the About Us content was created",
+ *         example="2022-04-25 10:15:00"
+ *     ),
+ *     @OA\Property(
+ *         property="updated_at",
+ *         type="string",
+ *         format="date-time",
+ *         description="The date and time when the About Us content was last updated",
+ *         example="2022-04-25 10:15:00"
+ *     )
+ * )
  */
 
 abstract class Controller

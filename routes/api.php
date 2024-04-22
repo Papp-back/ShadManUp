@@ -9,6 +9,7 @@ use App\Http\Controllers\api\PaymentController;
 use App\Http\Controllers\api\CourseController;
 use App\Http\Controllers\api\FAQController;
 use App\Http\Controllers\api\ProfileController;
+use App\Http\Controllers\api\AboutUsController;
 use App\Http\Controllers\api\NotificationController;
 use App\Http\Controllers\admin\AuthController as AdminAuthController;
 use App\Http\Controllers\admin\CategoryController as AdminCategoryController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\admin\CourseCommentController as AdminCourseCommentCont
 use App\Http\Controllers\admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\admin\FAQController as AdminFAQController;
 use App\Http\Controllers\admin\UserController as AdminUserController;
+use App\Http\Controllers\admin\AboutUsController as AdminAboutUsController;
 
 
 
@@ -63,6 +65,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/{id}', [FAQController::class, 'singleFaq'])->middleware('auth:api');
 
        
+    });
+    Route::group(['prefix' => 'aboutus'], function () {
+        Route::get('/', [AboutUsController::class, 'singleAboutUs'])->name('AboutUs.show');   
     });
 
 });
@@ -121,6 +126,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/{id}', [AdminFAQController::class, 'singleFaq'])->name('Faq.show');
         Route::put('/{id}', [AdminFAQController::class, 'updateFaq'])->name('Faq.update');
         Route::delete('/{id}', [AdminFAQController::class, 'destroyFaq'])->name('Faq.destroy');
+    });
+    Route::group(['prefix' => 'aboutus', 'middleware' => ['auth:admin',AdminCheckMiddleware::class]], function () {
+        Route::post('/', [AdminAboutUsController::class, 'StoreAboutUs'])->name('AboutUs.store');
+        Route::get('/{id}', [AdminAboutUsController::class, 'singleAboutUs'])->name('AboutUs.show');
+        Route::put('/{id}', [AdminAboutUsController::class, 'updateAboutUs'])->name('AboutUs.update');
+        Route::delete('/{id}', [AdminAboutUsController::class, 'destroyAboutUs'])->name('AboutUs.destroy');
     });
     Route::group(['prefix' => 'users', 'middleware' => ['auth:admin',AdminCheckMiddleware::class]], function () {
         Route::get('/', [AdminUserController::class, 'getUsers'])->name('Users.index');

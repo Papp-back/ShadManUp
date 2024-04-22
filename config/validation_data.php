@@ -284,5 +284,13 @@ return [
             'answer' => 'required|string',
         ],
     ],
+    'StoreAboutUs' => [
+        'messages' => [
+            'content.required' => 'متن درباره ما را وارد کنید',
+        ],
+        'rules' => [
+            'content' => 'required|string',
+        ],
+    ],
     
 ];
