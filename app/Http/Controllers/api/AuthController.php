@@ -81,50 +81,44 @@ class AuthController extends Controller
             $send_sms=true;
         }
         if ($user && ($user->phone_code_send_time < Carbon::now()->subMinutes(1)||$send_sms)) {
-			// $mobile=$user->cellphone;
-			// $curl = curl_init();
+			$username = "mehhhdi"; // در اینجا نام کاربری پنل را وارد نمایید
+            $password = "51535153Aa@";  // در اینجا پسوورد پنل کاربری خودتان را وارد نمایید.
+            $from = "+983000505"; // در اینجا شماره خط خدماتی سامانه را وارد نمایید
+            $pattern_code = "bz384mu04uzf1cg"; // کد الگوی مورد نظر را ایجا وارد کنید
+            $to = array($user->cellphone); // لیست گیرندگان را به صورت آرایه در اینجا درج کنید
+            $input_data = array(
+                    "code" => $code ,
+            );
 
-			// curl_setopt_array($curl, array(
-			// CURLOPT_URL => 'https://api.sms.ir/v1/send/verify',
-			// CURLOPT_RETURNTRANSFER => true,
-			// CURLOPT_ENCODING => '',
-			// CURLOPT_MAXREDIRS => 10,
-			// CURLOPT_TIMEOUT => 0,
-			// CURLOPT_FOLLOWLOCATION => true,
-			// CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			// CURLOPT_CUSTOMREQUEST => 'POST',
-			// CURLOPT_POSTFIELDS =>'{
-			// "mobile": "'.$mobile.'",
-			// "templateId": 116063,
-			// "parameters": [
-			// 	{
-			// 	"name": "code",
-			// 	"value": "'.$code.'"
-			// 	}
-
-			// ]
-			// }',
-			// CURLOPT_HTTPHEADER => array(
-			// 	'Content-Type: application/json',
-			// 	'Accept: text/plain',
-			// 	'x-api-key: 9ASwc4hnS90mQ0h5ulkkAFdLggDEy6j3QJGxl35310424qFkTPpVtQPssG9Thf6v'
-			// ),
-			// ));
-
-			// $response = curl_exec($curl);
-
-			// curl_close($curl);
-			// $response=json_decode($response);
-			$response=(object)['status'=>1];
-			if($response->status==1){
-				$user->phone_code=$code;
+            $url = "http://sms.rangine.ir/patterns/pattern?";
+            $url .= "username=".$username;
+            $url .= "&password=".urlencode($password);
+            $url .= "&from=" . $from;
+            $url .= "&to=".json_encode($to);
+            $url .= "&input_data=".urlencode(json_encode($input_data));
+            $url .= "&pattern_code=".$pattern_code;
+            $handler = curl_init($url);             
+            curl_setopt($handler, CURLOPT_CUSTOMREQUEST, "GET");                     
+            curl_setopt($handler, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($handler, CURLOPT_CONNECTTIMEOUT, 20); 
+            curl_setopt($handler, CURLOPT_TIMEOUT, 30);
+            $response = curl_exec($handler); 
+            if (curl_errno($handler)) {
+                $error= curl_error($handler);
+                return 'خطا در ارتباط با سامانه پیامک. علت خطا: ' . $error;
+               
+            }
+            
+            $result = json_encode($response);
+            if (is_array($result)) { // اگر پاسخ سرور آرایه باشد ارسال پیام موفق نبوده است
+                return jsonResponse([], 422, false,'خطا در ارسال پیامک', []);
+            } else { 
+                $user->phone_code=$code;
 				$user->phone_code_send_time=Carbon::now();
 				$user->save();
 				return jsonResponse([], 200, true, 'پیامک با موفقیت ارسال شد .', []);
-			}else{
-                return jsonResponse([], 422, false,'خطا در ارسال پیامک', []);
-					
-			}
+            };
+			
 		}else{
             return jsonResponse([], 422, false,'شما در هر دقیقه 1 درخواست میتوانید ارسال کنید .', []);
         }
