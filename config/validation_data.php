@@ -274,5 +274,15 @@ return [
             'copoun_id' => 'nullable',
         ],
     ],
+    'StoreFaq' => [
+        'messages' => [
+            'question.required' => 'متن سوال را وارد کنید',
+            'answer.required' => 'متن جواب را وارد کنید',
+        ],
+        'rules' => [
+            'question' => 'required|string',
+            'answer' => 'required|string',
+        ],
+    ],
     
 ];
