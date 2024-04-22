@@ -37,6 +37,8 @@ Route::prefix('v1')->group(function () {
     Route::group(['prefix' => 'profile'], function ($router) {
         Route::post('save-avatar', [ProfileController::class,'saveAvatar'])->middleware('auth:api');
         Route::put('update', [ProfileController::class, 'updateUserData'])->middleware('auth:api');
+        Route::get('courses', [ProfileController::class, 'UserCourses'])->middleware('auth:api');
+        Route::get('payments', [ProfileController::class, 'paymentHistory'])->middleware('auth:api');
     });
     Route::group(['prefix' => 'category'], function ($router) {
         Route::post('save-avatar', [ProfileController::class,'saveAvatar'])->middleware('auth:api');

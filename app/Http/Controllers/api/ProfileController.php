@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\Payment;
+use App\Models\CourseSection;
+use App\Models\Course;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 class ProfileController extends Controller
@@ -129,6 +132,128 @@ class ProfileController extends Controller
     
 
  }
+
+       /**
+ * @OA\Get(
+ *     path="/profile/courses",
+ *     summary="Get user purchased course",
+*      tags={"Profile"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Success",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Course")),
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Success"),
+ *             @OA\Property(property="errors", type="array", @OA\Items()),
+ *         ),
+ *     ),
+ *     security={{"bearerAuth": {}}},
+ * )
+ */
+
+ public function UserCourses(Request $request) {
+    $user_id=auth('api')->user()->id;
+    $purchasedCourses = Course::whereHas('payments', function ($query) use ($user_id) {
+        $query->where('user_id', $user_id)->where('pay', 1);
+    })->with(['payments', 'sections' => function ($query) use ($user_id) {
+        $query->whereHas('payments', function ($query) use ($user_id) {
+            $query->where('user_id', $user_id)->where('pay', 1);
+        });
+    }])->get();
+    
+    // Check if pay type is 'course' and include all sections
+    $purchasedCourses->each(function ($course) use ($user_id) {
+        $price_info=$this->getRemainingSectionFinalPriceSum($course->id,$user_id);
+        $course->price=$price_info[0];
+        $course->discount=$price_info[1];
+        $course->final_price=$price_info[0]-$price_info[1];
+        $course->image=url('storage'.$course->image);
+        // Get the payment record for the user and course
+        $payment = $course->payments->where('user_id', $user_id)->first();
+        if ($payment && $payment->paytype === 'course') {
+            // Get all sections for the course
+            $allSections = CourseSection::where('course_id', $course->id)->get();
+            // echo json_encode($allSections);
+            // Add the sections to the course
+            $course->purchased_sections = $allSections;
+        }else{
+            $course->purchased_sections= $course->sections;
+        }
+        unset($course->payments);
+        unset($course->sections);
+        return $course->prettifyPrice();
+    });
+
+  
+    return jsonResponse($purchasedCourses,200, true, '', []);
+}
+private function getRemainingSectionFinalPriceSum($courseId, $userId) {
+    // Retrieve IDs of all sections of the course
+    $allSections = CourseSection::where('course_id', $courseId)->get();
+    
+    // Retrieve IDs of purchased sections by the user
+    $purchasedSectionIds = Payment::where('course_id', $courseId)
+        ->where('user_id', $userId)
+        ->pluck('section_id')
+        ->toArray();
+    
+    // Calculate the sum of the final prices of remaining sections
+    $remainingFinalPriceSum = 0;
+    $allSectionsPriceSum = 0;
+    $allSectionsDiscountSum = 0;
+    foreach ($allSections as $section) {
+        $allSectionsPriceSum+=$section->price;
+        $allSectionsDiscountSum+=$section->discount;
+        if (!in_array($section->id, $purchasedSectionIds)) {
+            $remainingFinalPriceSum += (floatval($section->price)-floatval($section->discount));
+        }
+    }
+    $can_purchase=1;
+    if (!$remainingFinalPriceSum) {
+        $can_purchase=0;
+    }
+    
+    return [$allSectionsPriceSum,$allSectionsDiscountSum,$remainingFinalPriceSum,$can_purchase];
+}
+
+
+       /**
+ * @OA\Get(
+ *     path="/profile/payments",
+ *     summary="Get user payments list",
+*      tags={"Profile"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Success",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Payment")),
+ *             @OA\Property(property="status", type="integer", example=200),
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Success"),
+ *             @OA\Property(property="errors", type="array", @OA\Items()),
+ *         ),
+ *     ),
+ *     security={{"bearerAuth": {}}},
+ * )
+ */
+
+
+public function paymentHistory(Request $request)
+    {
+        // Get the authenticated user
+        $user = auth()->user();
+
+        // Fetch the payment history for the user
+        $payments = Payment::with('course')->with('section')->where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+
+        // Return the payment history as a response
+        return jsonResponse($payments,200, true, '', []);
+    }
+
 
 
 }

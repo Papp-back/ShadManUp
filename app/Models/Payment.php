@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\BaseModel as Model;
 use App\Models\User;
 use App\Models\Course;
+use App\Models\CourseSection;
 class Payment extends Model
 {
     use HasFactory;
@@ -28,6 +29,10 @@ class Payment extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+    public function section()
+    {
+        return $this->belongsTo(CourseSection::class);
     }
 
 }

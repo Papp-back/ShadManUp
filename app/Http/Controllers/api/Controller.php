@@ -265,9 +265,12 @@ namespace App\Http\Controllers\api;
  *     @OA\Property(property="section_id", type="string", nullable=true, description="The ID of the section (optional)(it will be integer id of course section when user want to pay for only a section of course(paytype is equal to 'section'))(it will be null when user want to pay for course (paytype is equal to 'course'))"),
  *     @OA\Property(property="Authority", type="string", description="The authority of the payment"),
  *     @OA\Property(property="StartPay", type="string", description="The start page of the payment that links to the zarinpal page"),
+ *     @OA\Property(property="refId", type="string", description="The reference id of the payment"),
  *     @OA\Property(property="pay", type="integer", format="int32", description="check if the payment succeeded(1 will be successful and 0 will be rejected)"),
  *     @OA\Property(property="created_at", type="string", format="date-time", description="The datetime when the payment was created"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", description="The datetime when the payment was last updated"),
+ *    @OA\Property(property="section", ref="#/components/schemas/SectionCourse"),
+ *    @OA\Property(property="course", ref="#/components/schemas/Course"),
  * )
  */
 
