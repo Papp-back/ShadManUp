@@ -6,11 +6,11 @@ return [
     'login' => [
         'messages' => [
             'mobile' => 'شماره موبایل را وارد کنید',
-            'password' => 'رمز عبور را وارد کنید',
+            // 'password' => 'رمز عبور را وارد کنید',
         ],
         'rules' => [
             'mobile' => 'required',
-            'password' => 'required',
+            // 'password' => 'required',
         ],
     ],
     'Adminlogin' => [
