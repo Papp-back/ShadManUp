@@ -233,6 +233,45 @@ namespace App\Http\Controllers\admin;
  *     @OA\Property(property="created_at", type="string", format="date-time", description="The datetime when the session was created"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", description="The datetime when the session was last updated"),
  * )
+ * 
+ * @OA\Schema(
+ *     schema="Faqs",
+ *     title="Faqs",
+ *     description="Faq model",
+ *     @OA\Property(
+ *         property="id",
+ *         type="integer",
+ *         description="The unique identifier for the FAQ",
+ *         example=1
+ *     ),
+ *     @OA\Property(
+ *         property="question",
+ *         type="string",
+ *         description="The question of the FAQ",
+ *         example="What is Laravel?"
+ *     ),
+ *     @OA\Property(
+ *         property="answer",
+ *         type="string",
+ *         description="The answer of the FAQ",
+ *         example="Laravel is a PHP framework for web development."
+ *     ),
+ *     @OA\Property(
+ *         property="created_at",
+ *         type="string",
+ *         format="date-time",
+ *         description="The date and time when the FAQ was created",
+ *         example="2022-04-25 10:15:00"
+ *     ),
+ *     @OA\Property(
+ *         property="updated_at",
+ *         type="string",
+ *         format="date-time",
+ *         description="The date and time when the FAQ was last updated",
+ *         example="2022-04-25 10:15:00"
+ *     )
+ * )
+ 
  */
 
 abstract class Controller

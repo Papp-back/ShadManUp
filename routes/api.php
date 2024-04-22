@@ -7,6 +7,7 @@ use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\api\PaymentController;
 use App\Http\Controllers\api\CourseController;
+use App\Http\Controllers\api\FAQController;
 use App\Http\Controllers\api\ProfileController;
 use App\Http\Controllers\api\NotificationController;
 use App\Http\Controllers\admin\AuthController as AdminAuthController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\admin\CourseSessionController as AdminCourseSessionCont
 use App\Http\Controllers\admin\CourseSectionController as AdminCourseSectionController;
 use App\Http\Controllers\admin\CourseCommentController as AdminCourseCommentController;
 use App\Http\Controllers\admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\admin\FAQController as AdminFAQController;
 use App\Http\Controllers\admin\UserController as AdminUserController;
 
 
@@ -55,6 +57,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/{id}/comments', [CourseController::class, 'setCommentsCourse'])->middleware('auth:api');
         Route::post('/commentlike', [CourseController::class, 'setCommentLikeCourse'])->middleware('auth:api');
         Route::post('/{id}/payment', [CourseController::class, 'setpaymentCourse'])->middleware('auth:api');
+    });
+    Route::group(['prefix' => 'faqs'], function () {
+        Route::get('/', [FAQController::class, 'getFaqs'])->middleware('auth:api');
+        Route::get('/{id}', [FAQController::class, 'singleFaq'])->middleware('auth:api');
+
+       
     });
 
 });
@@ -106,6 +114,13 @@ Route::prefix('admin')->group(function () {
         Route::get('/{id}', [AdminNotificationController::class, 'singleNotification'])->name('Notification.show');
         Route::put('/{id}', [AdminNotificationController::class, 'updateNotification'])->name('Notification.update');
         Route::delete('/{id}', [AdminNotificationController::class, 'destroyNotification'])->name('Notification.destroy');
+    });
+    Route::group(['prefix' => 'faqs', 'middleware' => ['auth:admin',AdminCheckMiddleware::class]], function () {
+        Route::get('/', [AdminFAQController::class, 'getFaqs'])->name('Faq.index');
+        Route::post('/', [AdminFAQController::class, 'StoreFaq'])->name('Faq.store');
+        Route::get('/{id}', [AdminFAQController::class, 'singleFaq'])->name('Faq.show');
+        Route::put('/{id}', [AdminFAQController::class, 'updateFaq'])->name('Faq.update');
+        Route::delete('/{id}', [AdminFAQController::class, 'destroyFaq'])->name('Faq.destroy');
     });
     Route::group(['prefix' => 'users', 'middleware' => ['auth:admin',AdminCheckMiddleware::class]], function () {
         Route::get('/', [AdminUserController::class, 'getUsers'])->name('Users.index');
