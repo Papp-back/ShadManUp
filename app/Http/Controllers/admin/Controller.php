@@ -129,16 +129,6 @@ namespace App\Http\Controllers\admin;
  *         description="A brief description of the course."
  *     ),
  *     @OA\Property(
- *         property="price",
- *         type="number",
- *         description="The price of the course."
- *     ),
- *     @OA\Property(
- *         property="discount",
- *         type="number",
- *         description="The discount applied to the course."
- *     ),
- *     @OA\Property(
  *         property="session",
  *         type="integer",
  *         format="int64",
