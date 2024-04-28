@@ -15,10 +15,10 @@ return [
     ],
     'Adminlogin' => [
         'messages' => [
-            'mobile' => 'شماره موبایل را وارد کنید',
+            'mobile_number' => 'شماره موبایل را وارد کنید',
         ],
         'rules' => [
-            'mobile' => 'required',
+            'mobile_number' => 'required',
         ],
     ],
     'verify' => [
@@ -133,7 +133,6 @@ return [
         ],
         'rules' => [
             'title' => 'required|string',
-            'hours' => 'required|numeric',
             'category_id' => 'required|integer|exists:categories,id',
             'author' => 'required|string',
             'description' => 'required|string',
@@ -290,6 +289,26 @@ return [
         ],
         'rules' => [
             'content' => 'required|string',
+        ],
+    ],
+    'deposit' => [
+        'messages' => [
+            'Amount.required' => 'مبلغ را وارد کنید.',
+            'Amount.integer' => '  مبلغ باید عددی باشد. ',
+        ],
+        'rules' => [
+            'Amount' => 'required|integer',
+        ],
+    ],
+    'withdraw' => [
+        'messages' => [
+            'Amount.required' => 'مبلغ را وارد کنید.',
+            'cardNumber.required' => 'شماره کارت را وارد کنید.',
+            'Amount.integer' => '  مبلغ باید عددی باشد. ',
+        ],
+        'rules' => [
+            'Amount' => 'required|integer',
+            'cardNumber' => 'required',
         ],
     ],
     

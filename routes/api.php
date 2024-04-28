@@ -62,9 +62,12 @@ Route::prefix('v1')->group(function () {
     });
     Route::group(['prefix' => 'faqs'], function () {
         Route::get('/', [FAQController::class, 'getFaqs'])->middleware('auth:api');
-        Route::get('/{id}', [FAQController::class, 'singleFaq'])->middleware('auth:api');
-
-       
+        Route::get('/{id}', [FAQController::class, 'singleFaq'])->middleware('auth:api');  
+    });
+    Route::group(['prefix' => 'wallet'], function () {
+        Route::post('/deposit', [PaymentController::class, 'deposit'])->middleware('auth:api');
+        Route::get('/verify', [PaymentController::class, 'walletverify']);
+        Route::post('/withdraw', [PaymentController::class, 'withdraw'])->middleware('auth:api');  
     });
     Route::group(['prefix' => 'aboutus'], function () {
         Route::get('/', [AboutUsController::class, 'singleAboutUs'])->name('AboutUs.show');   
@@ -74,6 +77,11 @@ Route::prefix('v1')->group(function () {
 Route::prefix('admin')->group(function () {
     Route::group(['prefix' => 'auth'], function ($router) {
         Route::post('login', [AdminAuthController::class,'Adminlogin'])->name('login');
+       
+    });
+    Route::group(['prefix' => 'profile','middleware'=>['auth:admin',AdminCheckMiddleware::class]], function ($router) {
+        Route::get('/', [AdminAuthController::class, 'AdminDetail']);
+
     });
     Route::group(['prefix' => 'categories','middleware'=>['auth:admin',AdminCheckMiddleware::class]], function ($router) {
         Route::get('/', [AdminCategoryController::class, 'getCategories']);

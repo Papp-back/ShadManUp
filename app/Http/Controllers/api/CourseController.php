@@ -478,7 +478,8 @@ public function setCommentLikeCourse(Request $request) {
  *             required={"paytype", "copoun_id"},
  *             @OA\Property(property="paytype", type="string",example="course", description="Type of payment (course or section)"),
  *             @OA\Property(property="copoun_id", type="integer", description="ID of the coupon, if any"),
- *             @OA\Property(property="section_id", type="integer", description="ID of the course section, if paying for a section")
+ *             @OA\Property(property="section_id", type="integer", description="ID of the course section, if paying for a section"),
+ *             @OA\Property(property="wallet_use", type="integer", description="ID of the course section, if user want use wallet")
  *         )
  *     ),
  *     @OA\Response(
@@ -520,6 +521,7 @@ public function setpaymentCourse($id,Request $request){
     $couponId=$request->input('copoun_id');
     $section_id=$request->input('section_id');
     $paytype=$request->input('paytype');
+    $wallet_use=$request->input('wallet_use');
     $user_id=auth('api')->user()->id;
     $user=User::find($user_id);
     if ($paytype=='course') {
@@ -538,15 +540,17 @@ public function setpaymentCourse($id,Request $request){
         $courseSection=CourseSection::find($section_id);
         $final_price=floatval($courseSection->price)-floatval($courseSection->discount);
     }
-    
-    $user_wallet=intval($user->wallet);
-    $walletExpire = $user->wallet_expire;
-    if ($walletExpire && Carbon::parse($walletExpire)->isFuture()) {
-        $user_wallet_gift=intval($user->wallet_gift);
-    } else {
-        $user_wallet_gift=0;
+    if ($wallet_use) {
+        $user_wallet=intval($user->wallet);
+        $walletExpire = $user->wallet_expire;
+        if ($walletExpire && Carbon::parse($walletExpire)->isFuture()) {
+            $user_wallet_gift=intval($user->wallet_gift);
+        } else {
+            $user_wallet_gift=0;
+        }
+        $wallet=$user_wallet+$user_wallet_gift;
     }
-    $wallet=$user_wallet+$user_wallet_gift;
+    
     // if ($couponId) {
     //     $coupon =$results = DB::table('coupons')
     //     ->where('expired_at', '>', now())
@@ -565,30 +569,32 @@ public function setpaymentCourse($id,Request $request){
     $authority=$this->generateRandomString();
 
     
-
-    if($final_price<$wallet){
-       
-        $paymnet=Payment::create([
-        'paytype'=>$paytype,
-        'course_id'=>$id,
-        'user_id'=>$user_id,
-        'Amount'=>$final_price,
-        'section_id'=>$paytype=='course'?null:$section_id,
-        'Authority'=>$authority,
-        'StartPay'=>'wallet',
-
-        ]); 
-        return response()->json([
-        'Amount'=>$final_price,
-        'StartPay'=>url('api/v1/payment/verify'. '?' . http_build_query(['Authority'=>$authority,'amount' => $final_price,'coupon_id'=>$couponId,'section_id'=>$section_id])),
-        'message'=>'success'
-    ]);  
-    }
-    if($wallet){
-        $final_price-=$wallet;
-    }
+    if ($wallet_use) {
+        if($final_price<$wallet){
     
-    $callBackUrl=url('api/v1/payment/verify'. '?' . http_build_query(['amount' => $final_price,'coupon_id'=>$couponId,'section_id'=>$section_id]));
+            $paymnet=Payment::create([
+            'paytype'=>$paytype,
+            'course_id'=>$id,
+            'user_id'=>$user_id,
+            'Amount'=>$final_price,
+            'section_id'=>$paytype=='course'?null:$section_id,
+            'Authority'=>$authority,
+            'StartPay'=>'wallet',
+    
+            ]); 
+            return response()->json([
+            'Amount'=>$final_price,
+            'StartPay'=>url('api/v1/payment/verify'. '?' . http_build_query(['Authority'=>$authority,'amount' => $final_price,'coupon_id'=>$couponId,'section_id'=>$section_id])),
+            'message'=>'success'
+        ]);  
+        }
+        if($wallet){
+            $final_price-=$wallet;
+        }
+    }
+   
+    
+    $callBackUrl=url('api/v1/payment/verify'. '?' . http_build_query(['amount' => $final_price,'coupon_id'=>$couponId,'section_id'=>$section_id,'wallet_use'=>$wallet_use]));
     $res = zarinpal()
                     ->amount($final_price) // مبلغ تراکنش
                     ->request()

@@ -22,6 +22,7 @@ class PaymentController
         $status = request()->query('Status'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
         $amount = request()->query('amount'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
         $coupon_id = request()->query('coupon_id'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
+        $wallet_use = request()->query('wallet_use'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
         $payment=Payment::where('Authority',$authority)->where('pay',0)->first();
         if (!$payment) {
             return response()->json(['message' => "پرداختی وجود ندارد."], 404);
@@ -49,14 +50,17 @@ class PaymentController
             $courseSection=CourseSection::find($section_id);
             $final_price=floatval($courseSection->price)-floatval($courseSection->discount);
         }
-        $user_wallet=intval($user->wallet);
-        $walletExpire = $user->wallet_expire;
-        if ($walletExpire && Carbon::now()->lt(Carbon::parse($walletExpire))) {
-            $user_wallet_gift=intval($user->wallet_gift);
-        } else {
-            $user_wallet_gift=0;
+        if ($wallet_use) {
+            $user_wallet=intval($user->wallet);
+            $walletExpire = $user->wallet_expire;
+            if ($walletExpire && Carbon::now()->lt(Carbon::parse($walletExpire))) {
+                $user_wallet_gift=intval($user->wallet_gift);
+            } else {
+                $user_wallet_gift=0;
+            }
+            $wallet=$user_wallet+$user_wallet_gift;
         }
-        $wallet=$user_wallet+$user_wallet_gift;
+       
         // if ($couponId) {
         //     $coupon =$results = DB::table('coupons')
         //     ->where('expired_at', '>', now())
@@ -80,25 +84,27 @@ class PaymentController
             $payment->delete();
             return $response->error()->message();
         }
-
-        if($wallet){
-            if ($final_price < $user_wallet_gift) {
-                $user_wallet_gift -= $final_price;
-                $user->wallet_gift=$user_wallet_gift;
-            } else {
-               
-                $final_price -= $user_wallet_gift;
-                if ($final_price<$user_wallet) {
-                    $user_wallet -= $final_price;
-                }else{
-                    $user_wallet=0;
+        if ($wallet_use) {
+            if($wallet){
+                if ($final_price < $user_wallet_gift) {
+                    $user_wallet_gift -= $final_price;
+                    $user->wallet_gift=$user_wallet_gift;
+                } else {
+                   
+                    $final_price -= $user_wallet_gift;
+                    if ($final_price<$user_wallet) {
+                        $user_wallet -= $final_price;
+                    }else{
+                        $user_wallet=0;
+                    }
+                    $user->wallet_gift=0;
+                    $user->wallet=$user_wallet;
                 }
-                $user->wallet_gift=0;
-                $user->wallet=$user_wallet;
+                $user->save();
+                
             }
-            $user->save();
-            
         }
+      
         if ($payment->StartPay=='wallet') {
             $payment->refId='کیف پول';
             $payment->pay=1;
@@ -122,8 +128,174 @@ class PaymentController
             
         }    
     }
+    /**
+ * @OA\Post(
+ *     path="/wallet/deposit",
+ *     summary="Deposit money to the user's wallet",
+ *     tags={"Wallet"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         description="Amount and card information",
+ *         @OA\JsonContent(
+ *             required={"Amount", "cardNumber"},
+ *             @OA\Property(property="Amount", type="number",example="1000", description="The amount to deposit(toman)"),
+ *             @OA\Property(property="description", type="string", description="Optional description for the deposit")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Success",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="Amount", type="number", description="The deposited amount"),
+ *             @OA\Property(property="StartPay", type="string", description="The URL for initiating the payment process"),
+ *             @OA\Property(property="message", type="string", description="Success message")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", description="Error message")
+ *         )
+ *     ),
+ *     security={{"bearerAuth": {}}}
+ * )
+ */
 
+    public function deposit(Request $request){
+        $validator=ValidationFeilds($request,__FUNCTION__);
+        if ($validator) {
+            return $validator;
+        }
+        $Amount=$request->input('Amount');
+        $description=$request->input('description');
+        $user_id=auth('api')->user()->id;
+        $user=User::find($user_id);
 
+        $callBackUrl=url('api/v1/wallet/verify'. '?' . http_build_query(['amount' => $Amount]));
+        $res = zarinpal()
+                        ->amount($Amount) // مبلغ تراکنش
+                        ->request()
+                        ->description('Payment User '.auth('api')->user()->id) // توضیحات تراکنش
+                        ->callbackUrl($callBackUrl) // آدرس برگشت پس از پرداخت
+                        // ->mobile(auth('api')->user()->user_) // شماره موبایل مشتری - اختیاری
+                        // ->email('name@domain.com') // ایمیل مشتری - اختیاری
+                        ->send();
+        if (!$res->success()) {
+            return jsonResponse([], 400, false, $res->error()->message(), []);
+        }
+        $paymnet=Payment::create([
+            'Authority'=>$res->authority(),
+            'StartPay'=>$res->url(),
+            'course_id'=>0,
+            'user_id'=>$user_id,
+            'paytype'=>'deposit',
+            'Amount'=>$Amount,
+            'section_id'=>null,
+            'desc'=>$description??null,
+
+        ]);   
+        return response()->json([
+            'Amount'=>$Amount,
+            'StartPay'=>$res->url(),
+            'message'=>'success'
+        ]);
+    }
+    public function walletverify(Request $request) {
+        
+        $authority = request()->query('Authority'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
+        $payment_id = request()->query('payment_id'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
+        $amount = request()->query('amount'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
+       
+        $payment=Payment::where('Authority',$authority)->where('pay',0)->first();
+        if (!$payment) {
+            return response()->json(['message' => "پرداختی وجود ندارد."], 404);
+        }
+        $user_id=$payment->user_id;
+        $user=User::find($user_id);
+        $response = zarinpal()
+        ->amount($amount)
+        ->verification()
+        ->authority($authority)
+        ->send();
+        if (!$response->success()) {
+            $payment->delete();
+            return $response->error()->message();
+        }
+        $user_wallet=floatval($user->wallet)+floatval($amount);
+        $user->wallet=$user_wallet;
+        $user->save();
+        $payment->refId=$response->referenceId();
+        $payment->pay=1;
+        $payment->save();
+        return 'پرداخت  با موفقیت انجام شد.';
+      
+         
+    }
+     /**
+ * @OA\Post(
+ *     path="/wallet/withdraw",
+ *     summary="withdraw money from the user's wallet",
+ *     tags={"Wallet"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         description="Amount and card information",
+ *         @OA\JsonContent(
+ *             required={"Amount", "cardNumber"},
+ *             @OA\Property(property="Amount", type="number",example="1000", description="The amount to deposit(toman)"),
+ *             @OA\Property(property="cardNumber", type="string", description="The user's card number"),
+ *             @OA\Property(property="description", type="string", description="Optional description for the deposit")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Success",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="Amount", type="number", description="The deposited amount"),
+ *             @OA\Property(property="StartPay", type="string", description="The URL for initiating the payment process"),
+ *             @OA\Property(property="message", type="string", description="Success message")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Bad Request",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", description="Error message")
+ *         )
+ *     ),
+ *     security={{"bearerAuth": {}}}
+ * )
+ */
+    public function withdraw(Request $request){
+        $validator=ValidationFeilds($request,__FUNCTION__);
+        if ($validator) {
+            return $validator;
+        }
+        $Amount=$request->input('Amount');
+        $cardNumber=$request->input('cardNumber');
+        $description=$request->input('description');
+        $user_id=auth('api')->user()->id;
+        $user=User::find($user_id);
+        if (floatval($user->wallet)<floatval($Amount)) {
+            return jsonResponse([], 422, false,'مبلغ درخواستی از موجودی کیف پول بیشتر است .', []);
+        }
+        $paymnet=Payment::create([
+            'card'=>$cardNumber,
+            'Authority'=>'',
+            'StartPay'=>'',
+            'course_id'=>0,
+            'user_id'=>$user_id,
+            'paytype'=>'withdraw',
+            'Amount'=>$Amount,
+            'section_id'=>null,
+            'desc'=>$description??null,
+        ]);
+        
+        $user->wallet= floatval($user->wallet)-floatval($Amount);
+        $user->save();
+        return jsonResponse([], 200, true,'با موفقیت ثبت شد.', []);
+       
+    }
     private function getRemainingSectionFinalPriceSum($courseId, $userId) {
         // Retrieve IDs of all sections of the course
         $allSections = CourseSection::where('course_id', $courseId)->get();

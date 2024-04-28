@@ -17,7 +17,7 @@ class Payment extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id', 'course_id', 'paytype', 'copoun_id','Amount', 'section_id', 'Authority','refId', 'StartPay', 'pay',
+        'user_id', 'course_id', 'paytype', 'copoun_id','Amount', 'section_id', 'Authority','refId', 'StartPay', 'pay','desc','card'
     ];
 
 
