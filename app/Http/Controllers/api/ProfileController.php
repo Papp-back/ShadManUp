@@ -248,7 +248,18 @@ public function paymentHistory(Request $request)
         $user = auth()->user();
 
         // Fetch the payment history for the user
-        $payments = Payment::with('course')->with('section')->where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+        $payments = Payment::with('course')->with('section')->where('user_id', $user->id)->orderBy('created_at', 'desc')->get()->map(function ($payment) {
+            if ($payment->paytype=='withdraw' ) {
+                if ($payment->pay==1) {
+                    $payment->status='واریز شده به حساب';
+                }else{
+                    $payment->status='درحال بررسی';
+                }
+            }else{
+                $payment->status='';
+            }
+            return $payment;
+        });
 
         // Return the payment history as a response
         return jsonResponse($payments,200, true, '', []);
