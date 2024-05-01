@@ -302,7 +302,25 @@ namespace App\Http\Controllers\admin;
  *         example="2022-04-25 10:15:00"
  *     )
  * )
- 
+ * @OA\Schema(
+ *     schema="Payment",
+ *     title="Payment",
+ *     description="Schema for a payment",
+ *     @OA\Property(property="id", type="integer", format="int64", description="The unique identifier for the payment"),
+ *     @OA\Property(property="user_id", type="integer", format="int64", description="The ID of the user making the payment"),
+ *     @OA\Property(property="course_id", type="integer", format="int64", description="The ID of the course being paid for"),
+ *     @OA\Property(property="paytype", type="string", description="The payment type ('section' or 'course')(course when used if user want to pay for course ,section when used if user want to pay for only a course section)"),
+ *     @OA\Property(property="copoun_id", type="string", nullable=true, description="The ID of the coupon used for the payment"),
+ *     @OA\Property(property="section_id", type="string", nullable=true, description="The ID of the section (optional)(it will be integer id of course section when user want to pay for only a section of course(paytype is equal to 'section'))(it will be null when user want to pay for course (paytype is equal to 'course'))"),
+ *     @OA\Property(property="Authority", type="string", description="The authority of the payment"),
+ *     @OA\Property(property="StartPay", type="string", description="The start page of the payment that links to the zarinpal page"),
+ *     @OA\Property(property="refId", type="string", description="The reference id of the payment"),
+ *     @OA\Property(property="pay", type="integer", format="int32", description="check if the payment succeeded(1 will be successful and 0 will be rejected)"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", description="The datetime when the payment was created"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", description="The datetime when the payment was last updated"),
+ *    @OA\Property(property="section", ref="#/components/schemas/SectionCourse"),
+ *    @OA\Property(property="course", ref="#/components/schemas/Course"),
+ * )
  */
 
 abstract class Controller

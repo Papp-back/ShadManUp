@@ -78,6 +78,7 @@ class FAQController extends Controller
             
         });
     }
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $faqs = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedFaq = $faqs->map(function ($faq) {

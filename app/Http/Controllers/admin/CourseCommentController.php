@@ -40,6 +40,20 @@ class CourseCommentController
  *         required=false,
  *         @OA\Schema(type="integer")
  *     ),
+ *     @OA\Parameter(
+ *         name="course_id",
+ *         in="query",
+ *         description="course Id query",
+ *         required=false,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="show",
+ *         in="query",
+ *         description="show query",
+ *         required=false,
+ *         @OA\Schema(type="integer")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Success",
@@ -75,10 +89,18 @@ class CourseCommentController
     $page = $request->input('page', 1);
     $search = $request->input('search');
     $user_id = $request->input('user_id');
+    $course_id = $request->input('course_id');
+    $show = $request->input('show');
     // Start building the query
-    $query = CourseComment::query()->with('user')->with('likes');
+    $query = CourseComment::query()->with('user')->with('course')->with('likes');
     if ($user_id) {
         $query->where('user_id', $user_id);
+    }
+    if ($course_id) {
+        $query->where('course_id', $course_id);
+    }
+    if ($show) {
+        $query->where('show', $show);
     }
     if ($search) {
         $query->where(function ($q) use ($search) {
@@ -86,6 +108,7 @@ class CourseCommentController
             
         });
     }
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedCourses = $courses->map(function ($course) {
@@ -136,7 +159,7 @@ class CourseCommentController
 */
 
 public function singleCommentCourse($id,Request $request) {
-    $course = CourseComment::with('user')->with('likes')->find($id);
+    $course = CourseComment::with('user')->with('course')->with('likes')->find($id);
     if (!$course) {
         return jsonResponse([], 200, false, 'دروه وجود ندارد .', []);
     }

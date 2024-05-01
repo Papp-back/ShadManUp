@@ -124,7 +124,12 @@ class CourseController
                 });
             }
             $course->sections->each(function ($section) use ($can_purchase,$user_id) {
-                
+                if (isset($section->sessions[0])) {
+                    $section->sessions->map(function ($session){
+                        $session->file_path=url('storage/'.$session->file_path); 
+                        return $session;
+                    });
+                }
                 if (!$can_purchase) {
                     $section->available_for_purchase=0;
                     $section->status='bought';
@@ -145,6 +150,9 @@ class CourseController
             $course->total_duration_time = '0';
         }
         $course->comments = $course->comments->map(function ($comment) use ($user_id) {
+            if ($comment->user->avatar) {
+                $comment->user->avatar=url('storage/'.$comment->user->avatar);
+            }
             // Check if the comment has likes
             if ($comment->likes) {
                 $comment->likes->each(function ($like) use ($comment, $user_id) {
@@ -236,6 +244,13 @@ public function singleCourse($id,Request $request) {
             });
         }
         $course->sections->each(function ($section) use ($can_purchase,$user_id){
+            if (isset($section->sessions[0])) {
+                $section->sessions->map(function ($session){
+                    $session->file_path=url('storage/'.$session->file_path); 
+                    return $session;
+                });
+            }
+           
             if (!$can_purchase) {
                 $section->available_for_purchase=0;
                 $section->status='bought';
@@ -255,6 +270,9 @@ public function singleCourse($id,Request $request) {
     
     
     $course->comments = $course->comments->map(function ($comment) use ($user_id) {
+        if ($comment->user->avatar) {
+            $comment->user->avatar=url('storage/'.$comment->user->avatar);
+        }
         // Check if the comment has likes
         if ($comment->likes) {
             $comment->likes->each(function ($like) use ($comment, $user_id) {
@@ -543,12 +561,18 @@ public function setpaymentCourse($id,Request $request){
     if ($wallet_use) {
         $user_wallet=intval($user->wallet);
         $walletExpire = $user->wallet_expire;
+        $user_wallet_pay_expire = $user->wallet_pay_expire;
         if ($walletExpire && Carbon::parse($walletExpire)->isFuture()) {
             $user_wallet_gift=intval($user->wallet_gift);
         } else {
             $user_wallet_gift=0;
         }
-        $wallet=$user_wallet+$user_wallet_gift;
+        if ($user_wallet_pay_expire && Carbon::now()->lt(Carbon::parse($user_wallet_pay_expire))) {
+            $user_wallet_pay=floatval($user->wallet_pay);
+        } else {
+            $user_wallet_pay=0;
+        }
+        $wallet=$user_wallet+$user_wallet_gift+$user_wallet_pay;
     }
     
     // if ($couponId) {
@@ -567,10 +591,9 @@ public function setpaymentCourse($id,Request $request){
     // }
     
     $authority=$this->generateRandomString();
-
     
     if ($wallet_use) {
-        if($final_price<$wallet){
+        if($final_price<=$wallet){
     
             $paymnet=Payment::create([
             'paytype'=>$paytype,
@@ -584,7 +607,7 @@ public function setpaymentCourse($id,Request $request){
             ]); 
             return response()->json([
             'Amount'=>$final_price,
-            'StartPay'=>url('api/v1/payment/verify'. '?' . http_build_query(['Authority'=>$authority,'amount' => $final_price,'coupon_id'=>$couponId,'section_id'=>$section_id])),
+            'StartPay'=>url('api/v1/payment/verify'. '?' . http_build_query(['Authority'=>$authority,'amount' => $final_price,'coupon_id'=>$couponId,'section_id'=>$section_id,'wallet_use'=>$wallet_use])),
             'message'=>'success'
         ]);  
         }
@@ -604,7 +627,7 @@ public function setpaymentCourse($id,Request $request){
                     // ->email('name@domain.com') // ایمیل مشتری - اختیاری
                     ->send();
     if (!$res->success()) {
-        return $res->error()->message();
+        return jsonResponse([], 400, false, $res->error()->message(), []);
     }
     $paymnet=Payment::create([
         'coupon_id'=>$couponId,

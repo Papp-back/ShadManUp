@@ -5,7 +5,7 @@ namespace App\Http\Controllers\admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller\admin;
 use App\Models\User;
-
+use Morilog\Jalali\Jalalian;
 
 class UserController extends Controller
 {
@@ -71,7 +71,7 @@ class UserController extends Controller
     $page = $request->input('page', 1);
     $search = $request->input('search');
     // Start building the query
-    $query = User::query()->with('referrer')->with('referrals')->with('notifications');
+    $query = User::query()->with('coursePayments')->withCount('coursePayments')->withCount('coursePayments')->withCount('comments');
     if ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('firstname', 'like', '%' . $search . '%');
@@ -84,6 +84,9 @@ class UserController extends Controller
     // Execute the query and paginate the results
     $users = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedUsers = $users->map(function ($user,$index) {
+        $referrals=User::where('referrer',$user->referral)->get();
+        $user->referrals=$referrals??[];
+        $user->referrals_count=count($referrals)??0;
         $user->avatar=$user->avatar?url('storage/'.$user->avatar):'';    
         return $user->withJdateHuman();
     });
@@ -133,13 +136,16 @@ class UserController extends Controller
 */
 
 public function singleUser($id,Request $request) {
-$user = User::with('referrer')->with('referrals')->with('notifications')->find($id);
+    $user = User::withCount('coursePayments')->withCount('coursePayments')->withCount('comments')->find($id);
 
-if (!$user) {
-    return jsonResponse([], 200, false, 'کاربر وجود ندارد .', []);
-}
-$user->avatar=$user->avatar?url('storage/'.$user->avatar):'';
-return jsonResponse($user->withJdateHuman(), 200, true, '', []);
+    if (!$user) {
+        return jsonResponse([], 200, false, 'کاربر وجود ندارد .', []);
+    }
+    $referrals=User::where('referrer',$user->referral)->get();
+    $user->referrals=$referrals??[];
+    $user->referrals_count=count($referrals)??0;
+    $user->avatar=$user->avatar?url('storage/'.$user->avatar):'';
+    return jsonResponse($user->withJdateHuman(), 200, true, '', []);
 }
 /**
  * @OA\Put(
@@ -201,10 +207,19 @@ public function updateUser($id,Request $request)
         return jsonResponse([], 404, false, 'کاربر پیدا نشد.', []);
     }
 
-
-    $user->login=$request->input('cellphone');
+    $InputData=$request->all();
+    $user->login=$user->cellphone?$user->cellphone:$InputData['cellphone'];
+    if ($request->has('born_at')) {
+        $born_at=$request->input('born_at');
+        $born_at = \Morilog\Jalali\CalendarUtils::convertNumbers(str_replace('/','-',$born_at), true);
+        // $persianDate = '1403/02/10';
+        list($year, $month, $day) = explode('-', $born_at);
+        $gregorianDate = Jalalian::fromFormat('Y/m/d', "$year/$month/$day")->toCarbon()->toDateString();
+        $InputData['born_at']=$gregorianDate;
+    }
+    $InputData['login']=$user->cellphone;
     // Update course details with other fields
-    $user->update($request->all());
+    $user->update($InputData);
 
     return jsonResponse($user, 200, true, 'با موفقیت به‌روزرسانی شد.', []);
 }

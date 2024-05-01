@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 // use Illuminate\Database\Eloquent\Model;
 use App\Models\BaseModel as Model;
 use App\Models\User;
+use App\Models\Course;
 class CourseComment extends Model
 {
     use HasFactory;
@@ -14,6 +15,10 @@ class CourseComment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
     }
     public function likes()
     {

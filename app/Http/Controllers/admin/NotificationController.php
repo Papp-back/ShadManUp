@@ -98,6 +98,7 @@ class NotificationController
             
         });
     }
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $notifications = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedNotification = $notifications->map(function ($notification) {

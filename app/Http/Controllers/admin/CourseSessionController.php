@@ -71,7 +71,7 @@ class CourseSessionController extends Controller
     $page = $request->input('page', 1);
     $search = $request->input('search');
     // Start building the query
-    $query = CourseSession::query()->with('section');
+    $query = CourseSession::query()->with('courseSection');
     if ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('title', 'like', '%' . $search . '%');
@@ -79,6 +79,7 @@ class CourseSessionController extends Controller
             
         });
     }
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedCourses = $courses->map(function ($course) {
@@ -184,6 +185,9 @@ public function singleSessionCourse($id,Request $request) {
     $course = CourseSession::find($id);
     if (!$course) {
         return jsonResponse([], 200, false, 'دروه وجود ندارد .', []);
+    }
+    if ($course->file_path) {
+        $course->file_path=url('storage/'.$course->file_path);
     }
     $course->section=CourseSection::with('course')->find($course->course_section_id);
     return jsonResponse($course->withJdateHuman(), 200, true, '', []);

@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\Payment;
 use App\Models\CourseSection;
 use App\Models\Course;
+use App\Models\Notification;
+use Morilog\Jalali\Jalalian;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 class ProfileController extends Controller
@@ -124,9 +126,18 @@ class ProfileController extends Controller
         return $validator;
     }
     $user = auth('api')->user();
-
+    
     // Update user data
     $user->update($request->all());
+    $user=User::find($user->id)->withJdateHuman();
+    $currentDateTime = Jalalian::now();
+    $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
+    Notification::create([
+        'title'=>'تغییر پروفایل کاربری',
+        'content'=>"{$user['firstname']} عزیز،در تاریخ {$formattedDateTime} اطلاعات پروفایل کاربری شما با موفقیت بروز رسانی شد.",
+        'user_id'=>$user['id'],
+        'read'=>0
+    ]);
         // Return response
     return jsonResponse([$user], 200, true, 'با موفقیت بروزرسانی شد.', []);
     

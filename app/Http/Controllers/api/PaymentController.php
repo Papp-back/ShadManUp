@@ -8,9 +8,11 @@ use App\Models\CourseComment;
 use App\Models\CourseSection;
 use App\Models\CommentLike;
 use App\Models\Payment;
+use App\Models\ReferralPay;
+use App\Models\Notification;
 use App\Models\User;
 use Carbon\Carbon;
-
+use Morilog\Jalali\Jalalian;
 
 
 
@@ -32,6 +34,7 @@ class PaymentController
         $paytype=$payment->paytype;
         $user_id=$payment->user_id;
         $user=User::find($user_id);
+
         if ($paytype=='course') {
             $course=Course::find($course_id);
             $price_info=$this->getRemainingSectionFinalPriceSum($course_id,$user_id);
@@ -53,12 +56,18 @@ class PaymentController
         if ($wallet_use) {
             $user_wallet=intval($user->wallet);
             $walletExpire = $user->wallet_expire;
+            $user_wallet_pay_expire = $user->wallet_pay_expire;
             if ($walletExpire && Carbon::now()->lt(Carbon::parse($walletExpire))) {
-                $user_wallet_gift=intval($user->wallet_gift);
+                $user_wallet_gift=floatval($user->wallet_gift);
             } else {
                 $user_wallet_gift=0;
             }
-            $wallet=$user_wallet+$user_wallet_gift;
+            if ($user_wallet_pay_expire && Carbon::now()->lt(Carbon::parse($user_wallet_pay_expire))) {
+                $user_wallet_pay=floatval($user->wallet_pay);
+            } else {
+                $user_wallet_pay=0;
+            }
+            $wallet=$user_wallet+$user_wallet_gift+$user_wallet_pay;
         }
        
         // if ($couponId) {
@@ -80,40 +89,159 @@ class PaymentController
         ->verification()
         ->authority($authority)
         ->send();
-        if ($payment->StartPay!='wallet' && $response && !$response->success()) {
-            $payment->delete();
-            return $response->error()->message();
-        }
+        // if ($payment->StartPay!='wallet' && $response && !$response->success()) {
+        //     $payment->delete();
+        //     return $response->error()->message();
+        // }
         if ($wallet_use) {
             if($wallet){
-                if ($final_price < $user_wallet_gift) {
-                    $user_wallet_gift -= $final_price;
-                    $user->wallet_gift=$user_wallet_gift;
-                } else {
-                   
-                    $final_price -= $user_wallet_gift;
-                    if ($final_price<$user_wallet) {
-                        $user_wallet -= $final_price;
-                    }else{
-                        $user_wallet=0;
+                if ($final_price < $user_wallet_pay) {
+                    $user_wallet_pay -= $final_price;
+                    $user->wallet_pay=$user_wallet_pay;
+                }else
+                {
+                    $final_price -= $user_wallet_pay;
+                    $user->wallet_pay=0;
+                    if ($final_price < $user_wallet_gift) {
+                        $user_wallet_gift -= $final_price;
+                        $user->wallet_gift=$user_wallet_gift;
+                    } else {
+                        $final_price -= $user_wallet_gift;
+                        if ($final_price<$user_wallet) {
+                            $user_wallet -= $final_price;
+                        }else{
+                            $user_wallet=0;
+                        }
+                        $user->wallet_gift=0;
+                        $user->wallet=$user_wallet;
                     }
-                    $user->wallet_gift=0;
-                    $user->wallet=$user_wallet;
                 }
+              
                 $user->save();
                 
             }
         }
-      
+        $d_amount=($amount*5)/100;
+        if (env('Business_partner_ID')) {
+            $Business_id = env('Business_partner_ID');
+            $b_user=User::find($Business_id);
+            $b_user->wallet=floatval($b_user->wallet)+$d_amount;
+            $b_user->save();
+            $currentDateTime = Jalalian::now();
+            $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
+            Notification::create([
+                'title'=>'دریافت پورسانت شریک تجاری ',
+                'content'=>"کیف پول شریک تجاری (آقای مهدی باصری) واریز شد. در تاریخ {$formattedDateTime} ، 5 درصد از مبلغ فروش محصول به شماره شناسه {$payment->id} به مبلغ {$d_amount} تومان",
+                'user_id'=>env('Admin_ID'),
+                'read'=>0
+            ]);
+            Notification::create([
+                'title'=>'دریافت پورسانت شریک تجاری ',
+                'content'=>"کیف پول شریک تجاری (آقای مهدی باصری) واریز شد. در تاریخ {$formattedDateTime} ، 5 درصد از مبلغ فروش محصول به شماره شناسه {$payment->id} به مبلغ {$d_amount} تومان",
+                'user_id'=>env('Business_partner_ID'),
+                'read'=>0
+            ]);
+        }
+        if (User::where('referrer',$user->referral)->first()) {
+            $user_r=User::find($user->id);
+            $user_r->wallet_gift=floatval($user->wallet_gift)+$d_amount;
+            $user_r->wallet_expire=Carbon::now()->addDays(90);
+            $user_r->save();
+            Notification::create([
+                'title'=>'هدیه خرید',
+                'content'=>" با تشکر از خرید شما . 5 درصد از خرید شما به عنوان هدیه به کیف پول شما برای خریدهای بعدی واریز شد. مهلت استفاده از آن 90 روز می باشد. ",
+                'user_id'=>$user->id,
+                'read'=>0
+            ]);
+            Payment::create([
+                'card'=>'',
+                'Authority'=>'',
+                'pay'=>1,
+                'StartPay'=>'',
+                'course_id'=>0,
+                'user_id'=>$user_r->id,
+                'paytype'=>'gift',
+                'Amount'=>$d_amount,
+                'section_id'=>null,
+                'desc'=>'هدیه خرید',
+            ]);
+        }
+        if ($user->referrer) {
+            $user_referrer=User::where('referral',$user->referrer)->first();
+            $user_referrer->wallet_pay=floatval($user_referrer->wallet_pay)+$d_amount;
+            $user_referrer->wallet_pay_expire=Carbon::now()->addDays(90);
+            $currentDateTime = Jalalian::now();
+            $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
+            ReferralPay::create([
+                'user_id'=>$user_referrer->id,
+                'payment_id'=>$payment->id,
+                'percent'=>5,
+                'description'=>"در تاریخ {$formattedDateTime} ،5درصد پورسانت خرید محصول توسط دوست شما ({$user->firstname} {$user->lastname}) به مبلغ {$d_amount} تومان به کیف پول شما واریز گردید.لازم به ذکر است که زمان برداشت این مبلغ از کیف پول 90 روز می باشد."
+            ]);
+            Notification::create([
+                'title'=>'هدیه خرید دوستان',
+                'content'=>"در تاریخ {$formattedDateTime} ،5درصد پورسانت خرید محصول توسط دوست شما ({$user->firstname} {$user->lastname}) به مبلغ {$d_amount} تومان به کیف پول شما واریز گردید.لازم به ذکر است که زمان برداشت این مبلغ از کیف پول 90 روز می باشد.",
+                'user_id'=>$user_referrer->id,
+                'read'=>0
+            ]);
+            Payment::create([
+                'card'=>'',
+                'Authority'=>'',
+                'StartPay'=>'',
+                'course_id'=>0,
+                'user_id'=>$user_referrer->id,
+                'paytype'=>'gift',
+                'Amount'=>$d_amount,
+                'section_id'=>null,
+                'pay'=>1,
+                'desc'=>'هدیه خرید دوستان',
+            ]);
+            $user_referrer->save();
+            $user=User::find($user->id);
+            $p=($amount*10)/100;
+            $user->wallet_gift=floatval($user->wallet_gift)+$p;
+            $user->wallet_expire=Carbon::now()->addDays(90);
+            $user->save();
+            Notification::create([
+                'title'=>'هدیه خرید',
+                'content'=>" با تشکر از خرید شما . 10 درصد از خرید شما به عنوان هدیه به کیف پول شما برای خریدهای بعدی واریز شد. مهلت استفاده از آن 90 روز می باشد. ",
+                'user_id'=>$user->id,
+                'read'=>0
+            ]);
+            Payment::create([
+                'card'=>'',
+                'Authority'=>'',
+                'StartPay'=>'',
+                'course_id'=>0,
+                'user_id'=>$user->id,
+                'paytype'=>'gift',
+                'Amount'=>$p,
+                'pay'=>1,
+                'section_id'=>null,
+                'desc'=>'هدیه خرید',
+            ]);
+        }
+        if ($payment->paytype=='section') {
+            $Course=CourseSection::find($payment->section_id);
+        }else{
+            $Course=Course::find($payment->course_id);
+        }
+        
+        Notification::create([
+            'title'=>'خرید محصول',
+            'content'=>"با تشکر از خرید شما.محصول با نام {$Course->title} با موفقیت خریداری شد.شما میتوانید در پروفایل کاربری خود محصولاتی که خریده اید را مشاهده کنید.",
+            'user_id'=>$user->id,
+            'read'=>0
+        ]);
         if ($payment->StartPay=='wallet') {
             $payment->refId='کیف پول';
             $payment->pay=1;
             $payment->save();
             return 'پرداخت از کیف پول با موفقیت انجام شد.';
         }else{
-       
            
-            $payment->refId=$response->referenceId();
+            // $payment->refId=$response->referenceId();
+            $payment->refId='ascascasc';
             $payment->pay=1;
             $payment->save();
             // دریافت هش شماره کارتی که مشتری برای پرداخت استفاده کرده است
@@ -124,7 +252,7 @@ class PaymentController
             
             // پرداخت موفقیت آمیز بود
             // دریافت شماره پیگیری تراکنش و انجام امور مربوط به دیتابیس
-            return $response->referenceId();
+            return 'تراکنش با موفقیت انجام شد.';
             
         }    
     }
@@ -208,6 +336,7 @@ class PaymentController
         $amount = request()->query('amount'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
        
         $payment=Payment::where('Authority',$authority)->where('pay',0)->first();
+        
         if (!$payment) {
             return response()->json(['message' => "پرداختی وجود ندارد."], 404);
         }
@@ -228,6 +357,16 @@ class PaymentController
         $payment->refId=$response->referenceId();
         $payment->pay=1;
         $payment->save();
+        if ($payment) {
+            $currentDateTime = Jalalian::now();
+            $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
+            Notification::create([
+                'title'=>'واریز به کیف پول',
+                'content'=>"{$user->firstname} عزیز در تاریخ {$formattedDateTime} کیف  پول شما به مبلغ {$amount} تومان با موفقیت شارژ شد.",
+                'user_id'=>$user->id,
+                'read'=>0
+            ]);
+        }
         return 'پرداخت  با موفقیت انجام شد.';
       
          
@@ -276,10 +415,15 @@ class PaymentController
         $description=$request->input('description');
         $user_id=auth('api')->user()->id;
         $user=User::find($user_id);
+        if (floatval($Amount)<100000) {
+            return jsonResponse([], 422, false,'مبلغ درخواستی نباید کمتر از 100000 تومان باشد.', []);
+        }
         if (floatval($user->wallet)<floatval($Amount)) {
             return jsonResponse([], 422, false,'مبلغ درخواستی از موجودی کیف پول بیشتر است .', []);
         }
-        $paymnet=Payment::create([
+
+        
+        $payment=Payment::create([
             'card'=>$cardNumber,
             'Authority'=>'',
             'StartPay'=>'',
@@ -290,7 +434,16 @@ class PaymentController
             'section_id'=>null,
             'desc'=>$description??null,
         ]);
-        
+        if ($payment) {
+            $currentDateTime = Jalalian::now();
+            $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
+            Notification::create([
+                'title'=>'درخواست برداشت از کیف پول',
+                'content'=>withdrawalNotification($user->firstname,'',$formattedDateTime,$cardNumber),
+                'user_id'=>$user->id,
+                'read'=>0
+            ]);
+        }
         $user->wallet= floatval($user->wallet)-floatval($Amount);
         $user->save();
         return jsonResponse([], 200, true,'با موفقیت ثبت شد.', []);

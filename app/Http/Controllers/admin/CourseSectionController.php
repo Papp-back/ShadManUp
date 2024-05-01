@@ -76,10 +76,11 @@ class CourseSectionController extends Controller
             
         });
     }
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedCourses = $courses->map(function ($course) {
-        return $course->withJdateHuman();
+        return $course->prettifyPrice()->withJdateHuman();
     });
     return jRWithPagination($courses, $transformedCourses, 200, true, '', []);
 }
@@ -182,7 +183,7 @@ public function singleSectionCourse($id,Request $request) {
     if (!$course) {
         return jsonResponse([], 200, false, 'دروه وجود ندارد .', []);
     }
-    return jsonResponse($course->withJdateHuman(), 200, true, '', []);
+    return jsonResponse($course->prettifyPrice()->withJdateHuman(), 200, true, '', []);
 }
 /**
  * @OA\Put(

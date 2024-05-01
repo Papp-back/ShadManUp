@@ -21,6 +21,8 @@ use App\Http\Controllers\admin\NotificationController as AdminNotificationContro
 use App\Http\Controllers\admin\FAQController as AdminFAQController;
 use App\Http\Controllers\admin\UserController as AdminUserController;
 use App\Http\Controllers\admin\AboutUsController as AdminAboutUsController;
+use App\Http\Controllers\admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\admin\DashboardController as AdminDashboardController;
 
 
 
@@ -31,8 +33,7 @@ Route::prefix('v1')->group(function () {
         Route::get('login', [AuthController::class,'loginapp']);
         Route::post('verify', [AuthController::class,'verify']);
         Route::post('user-referral', [AuthController::class,'userReferral'])->middleware('auth:api');
-        
-        
+        Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api'); 
     });
     Route::group(['prefix' => 'user'], function ($router) {
         Route::get('detail', [AuthController::class,'userDetail'])->middleware('auth:api');
@@ -75,9 +76,18 @@ Route::prefix('v1')->group(function () {
 
 });
 Route::prefix('admin')->group(function () {
+    Route::post('logout', [AdminAuthController::class,'AdminLogOut'])->name('login');
     Route::group(['prefix' => 'auth'], function ($router) {
         Route::post('login', [AdminAuthController::class,'Adminlogin'])->name('login');
        
+    });
+    Route::group(['prefix' => 'dashboard','middleware'=>['auth:admin',AdminCheckMiddleware::class]], function ($router) {
+        Route::get('/statistics', [AdminDashboardController::class, 'statics']);
+        Route::get('/latest-notifications', [AdminDashboardController::class, 'latestNotifications']);
+        Route::get('/latest-comments', [AdminDashboardController::class, 'latestComments']);
+        Route::get('/latest-orders', [AdminDashboardController::class, 'latestOrders']);
+        Route::get('/order-chart', [AdminDashboardController::class, 'paymentsChart']);
+
     });
     Route::group(['prefix' => 'profile','middleware'=>['auth:admin',AdminCheckMiddleware::class]], function ($router) {
         Route::get('/', [AdminAuthController::class, 'AdminDetail']);
@@ -146,5 +156,11 @@ Route::prefix('admin')->group(function () {
         Route::get('/{id}', [AdminUserController::class, 'singleUser'])->name('Users.show');
         Route::put('/{id}', [AdminUserController::class, 'updateUser'])->name('Users.update');
         Route::delete('/{id}', [AdminUserController::class, 'destroyUser'])->name('Users.destroy');
+    });
+    Route::group(['prefix' => 'payments', 'middleware' => ['auth:admin',AdminCheckMiddleware::class]], function () {
+        Route::get('/', [AdminPaymentController::class, 'getPayments'])->name('payments.index');
+        Route::post('/{id}/approve', [AdminPaymentController::class, 'approvePayment'])->name('payments.approve');
+        Route::post('/{id}/reject', [AdminPaymentController::class, 'rejectPayment'])->name('payments.reject');
+      
     });
 });

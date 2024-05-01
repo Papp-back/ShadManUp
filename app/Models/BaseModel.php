@@ -46,4 +46,18 @@ class BaseModel extends Model
         $this->final_price_prettified=number_format(floatval($this->price)-floatval($this->discount), 0, '.', ',');
         return $this;
     }
+    public function prettifyAmount()
+    {
+
+        $this->amount_prettified=number_format(floatval($this->Amount), 0, '.', ',');
+        return $this;
+    }
+    public function prettifyPriceWallet()
+    {
+
+        $this->wallet_prettified=number_format(floatval($this->wallet), 0, '.', ',');
+        $this->wallet_gift_prettified=number_format(floatval($this->wallet_gift), 0, '.', ',');
+        $this->wallet_pay_prettified=number_format(floatval($this->wallet_pay), 0, '.', ',');
+        return $this;
+    }
 }

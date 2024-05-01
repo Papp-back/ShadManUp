@@ -79,11 +79,12 @@ class NotificationController
     // Start building the query
     $query = Notification::query()->with('user');
     $query->where('user_id', $user_id);
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $notifications = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedNotification = $notifications->map(function ($notification) {
-        $nofif=Notification::find($notification->id);
-        $nofif->read=1;
+        $notif=Notification::find($notification->id);
+        $notif->read=1;
         $notif->save();
         return $notification->withJdateHuman();
     });

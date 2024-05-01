@@ -79,7 +79,7 @@ class CategoryController extends Controller
         $search = $request->input('search');
         $level = $request->input('level');
         // Start building the query
-        $query = Category::query()->with('children');
+        $query = Category::query()->with('children')->with('parent');
         if ($level) {
             $query->where('level', $level);
         }
@@ -89,17 +89,18 @@ class CategoryController extends Controller
                 
             });
         }
+        
         // Execute the query and paginate the results
         $categories = $query->paginate($perPage, ['*'], 'page', $page);
         $transformedCategories = $categories->map(function ($Category) {
             $parent=Category::find($Category->parent_id);
-            $Category->parent=null;
-            if ($parent) {
-                $Category->parent=[
-                    'id'=>$parent->id||null,
-                    'name'=>$parent->name||null,
-                ];
-            }
+            // $Category->parent=null;
+            // if ($parent) {
+            //     $Category->parent=[
+            //         'id'=>$parent->id||null,
+            //         'name'=>$parent->name||null,
+            //     ];
+            // }
             return $Category->withJdateHuman();
         });
     
@@ -222,12 +223,10 @@ class CategoryController extends Controller
         return jsonResponse([], 404, false, 'آیتم وجود ندارد .', []);
     }
     $parent=Category::find($category->parent_id);
-    if ($parent) {
-        $category->parent=[
-            'id'=>$parent->id||null,
-            'name'=>$parent->name||null,
-        ];
-    }
+    $category->parent=[
+        'id'=>isset($parent->id)?$parent->id:0,
+        'name'=>isset($parent->name)?$parent->name:'دسته بندی مادر',
+    ];
     return jsonResponse($category->withJdateHuman(), 200, true, '', []);
 }
 /**
@@ -291,7 +290,7 @@ class CategoryController extends Controller
 
     public function updateCategory($id,Request $request)
     {
-        $validator = ValidationFeilds($request, 'StoreCategory');
+        $validator = ValidationFeilds($request, __FUNCTION__);
         if ($validator) {
             return $validator;
         }

@@ -34,13 +34,17 @@ class CourseController extends Controller
  *         required=false,
  *         @OA\Schema(type="string")
  *     ),
- *     @OA\Parameter(
- *         name="category_id",
- *         in="query",
- *         description="category_id query",
- *         required=false,
- *         @OA\Schema(type="integer")
+  * @OA\Parameter(
+ *     name="category_ids[]",
+ *     in="query",
+ *     description="Array of category IDs",
+ *     required=false,
+ *     @OA\Schema(
+ *         type="array",
+ *         @OA\Items(type="integer")
  *     ),
+ *     style="form"
+ * ),
  *     @OA\Response(
  *         response=200,
  *         description="Success",
@@ -75,11 +79,16 @@ class CourseController extends Controller
     $perPage = $request->input('per_page', 10);
     $page = $request->input('page', 1);
     $search = $request->input('search');
-    $category_id = $request->input('category_id');
+    $category_ids = $request->input('category_ids');
     // Start building the query
     $query = Course::query()->with('category')->with('sections');
-    if ($category_id) {
-        $query->where('category_id', $category_id);
+
+    if ($category_ids) {
+        $query->where(function ($q) use ($category_ids) {
+            foreach ($category_ids as $category_id) {
+                $q->orWhere('category_id', 'like', '%' . $category_id . '%');
+            }
+        });
     }
     if ($search) {
         $query->where(function ($q) use ($search) {
@@ -87,6 +96,7 @@ class CourseController extends Controller
             
         });
     }
+    $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
     $transformedCourses = $courses->map(function ($course,$index) {
@@ -422,7 +432,7 @@ public function updateCourse($id,Request $request)
 */
 
 public function destroyCourse($id,Request $request) {
-    $course = Category::find($id);
+    $course = Course::find($id);
     if (!$course) {
         return jsonResponse([], 404, false, 'آیتم وجود ندارد .', []);
     }

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -17,7 +18,7 @@ use App\Traits\JalaliDateTrait;
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable,JalaliDateTrait;
-    
+    protected $appends = ['total_course_payments'];
     protected $fillable = [
         'avatar',
         'referral',
@@ -37,7 +38,8 @@ class User extends Authenticatable implements JWTSubject
         'referrer',
         'ref_level',
         'login_level',
-        'login'
+        'login',
+        'born_at'
     ];
     public function getJWTIdentifier()
     {
@@ -137,7 +139,7 @@ class User extends Authenticatable implements JWTSubject
 
         $array['jcreated_at'] = $this->getJCreatedAtAttribute();
         $array['jupdated_at'] = $this->getJUpdatedAtAttribute();
-       
+        $array['jborn_at'] = $this->getJBornAtAttribute();
 
         return $array;
     }
@@ -146,11 +148,39 @@ class User extends Authenticatable implements JWTSubject
         $array = parent::toArray();
         $array['jcreated_at'] = $this->getJCreatedAtAttribute();
         $array['jupdated_at'] = $this->getJUpdatedAtAttribute();
+        $array['jborn_at'] = $this->getJBornAtAttribute();
         $array['created_at_for_humans'] = $this->getCreatedAtForHumansAttribute();
         $array['updated_at_for_humans'] = $this->getUpdatedAtForHumansAttribute();
         $array['deleted_at_for_humans'] = $this->getDeletedAtForHumansAttribute();
+        $array['wallet_prettified'] = number_format(floatval($this->wallet), 0, '.', ',');
+        $array['wallet_gift_prettified'] =number_format(floatval($this->wallet_gift), 0, '.', ',');
+        $array['total_course_payments_prettified'] =number_format(floatval($this->total_course_payments), 0, '.', ',');
        
 
         return $array;
+    }
+    public function prettifyPriceWallet()
+    {
+        $array = parent::toArray();
+        $array['wallet_prettified'] = number_format(floatval($this->wallet), 0, '.', ',');
+        $array['wallet_gift'] =number_format(floatval($this->wallet_gift), 0, '.', ',');
+        return $array;
+    }
+    public function getTotalCoursePaymentsAttribute()
+    {
+        return $this->coursePayments()->sum('Amount');
+    }
+    public function coursePayments()
+    {
+        return $this->hasMany(Payment::class)->where('payments.pay', 1)->where(function ($q) {
+            $q->where('paytype','section');
+            $q->orWhere('paytype','course');
+            
+        })
+        ;
+    }
+    public function comments()
+    {
+        return $this->hasMany(CourseComment::class);
     }
 }

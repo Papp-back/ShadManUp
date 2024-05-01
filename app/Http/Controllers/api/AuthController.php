@@ -7,10 +7,13 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\Notification;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Storage;
+
 
 class AuthController extends Controller
 {
@@ -84,7 +87,7 @@ class AuthController extends Controller
 			$username = "mehhhdi"; // در اینجا نام کاربری پنل را وارد نمایید
             $password = "51535153Aa@";  // در اینجا پسوورد پنل کاربری خودتان را وارد نمایید.
             $from = "+983000505"; // در اینجا شماره خط خدماتی سامانه را وارد نمایید
-            $pattern_code = "bz384mu04uzf1cg"; // کد الگوی مورد نظر را ایجا وارد کنید
+            $pattern_code = "iextywuz551xmj2"; // کد الگوی مورد نظر را ایجا وارد کنید
             $to = array($user->cellphone); // لیست گیرندگان را به صورت آرایه در اینجا درج کنید
             $input_data = array(
                     "code" => $code ,
@@ -206,6 +209,31 @@ class AuthController extends Controller
         if ($request->input('code')!=$user->phone_code) {
             return jsonResponse([], 422, false,'کد ارسالی نامعتبر است .', []);
         }
+        if ($user->login_level <2) {
+            $user->login_level=2;
+            $user->wallet_gift=100000;
+            $user->wallet_expire=Carbon::now()->addDays(15);
+            $user->save();
+             
+            Notification::create([
+                'title'=>'هدیه ثبت نام',
+                'content'=>' کاربر عزیز ضمن خوش آمدگویی به شما ،مبلغ 100 هزار تومان بابت ثبت نام به کیف پول شما واریز شد.این مبلغ دارای تاریخ انقضای 15 روزه می باشد.',
+                'user_id'=>$user->id,
+                'read'=>0
+            ]);
+            Payment::create([
+                'card'=>'',
+                'Authority'=>'',
+                'StartPay'=>'',
+                'course_id'=>0,
+                'user_id'=>$user->id,
+                'paytype'=>'gift',
+                'Amount'=>100000,
+                'section_id'=>null,
+                'desc'=>'هدیه ثبت نام',
+            ]);
+        }
+        
         return $this->respondWithToken($token);
     }
    /**
@@ -259,16 +287,30 @@ class AuthController extends Controller
             if ($user_referrer) {
                 $user_referrer->wallet=floatval($user_referrer->wallet)+10000;
                 $user_referrer->save();
-                $user_main->wallet_gift=100000;
-                $user_main->wallet_expire=Carbon::now()->addDays(15);
                 $user_main->referrer=$user_referrer->referral;
                 $user_main->ref_level=$user_referrer->getReferralLevel()+1;
             }
             
             $user_main->login_level=3;
             $user_main->phone_code=null;
-           
             $user_main->save();
+            Notification::create([
+                'title'=>'هدیه معرفی دوستان',
+                'content'=>'کاربر گرامی،با ثبت نام یکی از دوستان شما مبلغ 10000 تومان به کیف پول شما واریز شد ',
+                'user_id'=>$user_referrer->id,
+                'read'=>0
+            ]);
+            Payment::create([
+                'card'=>'',
+                'Authority'=>'',
+                'StartPay'=>'',
+                'course_id'=>0,
+                'user_id'=>$user_referrer->id,
+                'paytype'=>'gift',
+                'Amount'=>10000,
+                'section_id'=>null,
+                'desc'=>'هدیه معرفی دوستان',
+            ]);
             return jsonResponse([], 200, true,'کد معرف با موفقیت به ثبت رسید', []);
         }else{
             return jsonResponse([], 422, false,'کد معرف کاربر قبلا به ثبت رسیده است', []);
@@ -333,11 +375,23 @@ class AuthController extends Controller
                 $r_user->save();
             } 
         }
+        if ($user->wallet_pay_expire !== null) {
+            $wallet_pay_expire = Carbon::parse($user->wallet_pay_expire);
+            $currentTime = Carbon::now();
+            if ($currentTime->greaterThanOrEqualTo($wallet_pay_expire)) {
+                $r_user=User::find($user->id);
+                $r_user->wallet_pay_expire=null;
+                $r_user->save();
+            } 
+        }
         $wallet_gift=floatval($user['wallet_gift'])??0;
+        $wallet_pay=floatval($user['wallet_pay'])??0;
         $wallet=floatval($user['wallet'])??0;
-        $user['wallet']=$wallet_gift+$wallet;
+        $user['wallet']=$wallet_gift+$wallet+$wallet_pay;
         unset($user['wallet_gift']);
+        unset($user['wallet_pay']);
         unset($user['wallet_expire']);
+        unset($user['wallet_pay_expire']);
         unset($user['login']);
         unset($user['password']);
         unset($user['login_level']);
@@ -376,4 +430,30 @@ class AuthController extends Controller
         ], 200, true, '', []);
     }
     
+/**
+ * @OA\Post(
+ *     path="/auth/logout",
+ *     summary="Log out the currently authenticated user",
+ *     tags={"Authentication"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successfully logged out",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Successfully logged out")
+ *         )
+ *     )
+ * )
+ */
+    public function logout()
+{
+    Auth::guard('api')->logout();
+
+    return jsonResponse([], 200, true,'با موفقیت خارج شد.', []);
 }
+}
+
+
+
+
+
