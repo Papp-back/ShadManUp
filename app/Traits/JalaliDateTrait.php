@@ -17,6 +17,10 @@ trait JalaliDateTrait
     {
         return $this->attributes['updated_at']?JalaliHelper::convertToJalali($this->attributes['updated_at']):null;
     }
+    public function getJBornAtAttribute()
+    {
+        return $this->attributes['born_at']?JalaliHelper::convertToJalali2($this->attributes['born_at']):null;
+    }
 
     public function getCreatedAtForHumansAttribute()
     {

@@ -12,4 +12,8 @@ class JalaliHelper
     {
         return Jalalian::fromDateTime($date)->format('Y/m/d H:i:s');
     }
+    public static function convertToJalali2($date)
+    {
+        return Jalalian::fromDateTime($date)->format('Y/m/d');
+    }
 }

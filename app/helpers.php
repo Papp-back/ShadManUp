@@ -109,3 +109,14 @@ if (!function_exists('jRWithPagination')) {
         ], $status);
     }
 }
+if (!function_exists('withdrawalNotification')) {
+    function withdrawalNotification($username, $status, $date, $cardNumber) {
+        if ($status == 'success') {
+            return "{$username} عزیز، درخواست برداشت شما با موفقیت در تاریخ {$date}  به  شماره کارت {$cardNumber} انجام شد. می‌توانید وضعیت آن را بررسی کنید.";
+        } elseif ($status == 'error') {
+            return "{$username} عزیز، در هنگام پردازش درخواست برداشت شما خطایی رخ داده است. لطفاً برای کمک با پشتیبانی تماس بگیرید.";
+        } else {
+            return " {$username} عزیز، درخواست برداشت شما در حال حاضر منتظر تأیید است. پس از پردازش، اطلاع رسانی خواهید شد.";
+        }
+    }
+}
