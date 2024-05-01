@@ -209,7 +209,7 @@ public function updateUser($id,Request $request)
 
     $InputData=$request->all();
     $user->login=$user->cellphone?$user->cellphone:$InputData['cellphone'];
-    if ($request->has('born_at')) {
+    if ($request->has('born_at') && $request->input('born_at')) {
         $born_at=$request->input('born_at');
         $born_at = \Morilog\Jalali\CalendarUtils::convertNumbers(str_replace('/','-',$born_at), true);
         // $persianDate = '1403/02/10';
