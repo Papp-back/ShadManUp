@@ -99,15 +99,16 @@ class CourseCommentController
     if ($course_id) {
         $query->where('course_id', $course_id);
     }
+   
     if ($show) {
-        $query->where('show', $show);
+        if($show=='2'){
+            $query->where('show', 0);
+        }else{
+            $query->where('show', $show);
+        }
+        
     }
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('comment', 'like', '%' . $search . '%');
-            
-        });
-    }
+    
     $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
