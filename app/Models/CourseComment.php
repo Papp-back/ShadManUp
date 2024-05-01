@@ -11,7 +11,14 @@ class CourseComment extends Model
 {
     use HasFactory;
     protected $fillable = ['course_id', 'user_id', 'comment','show'];
-
+ /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'show' => 'integer', // Cast the 'pay' column to integer
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);
