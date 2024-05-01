@@ -179,18 +179,18 @@ class DashboardController
         
         // Retrieve payments for the 30-day period
         $payments = DB::table('payments')
-            ->rightJoin(
-                DB::raw('(' . $dateRange->map(function ($date) {
-                    return "SELECT '$date' AS date";
-                })->implode(' UNION ALL ') . ') AS dates'),
-                function ($join) {
-                    $join->on('dates.date', '=', DB::raw('DATE(payments.created_at)'));
-                }
-            )
-            ->selectRaw('dates.date, COALESCE(SUM(payments.amount), 0) as total_pay')
-            ->groupBy('dates.date')
-            ->orderBy('dates.date')
-            ->get();
+        ->rightJoin(
+            DB::raw('(' . $dateRange->map(function ($date) {
+                return "SELECT '$date' AS date";
+            })->implode(' UNION ALL ') . ') AS dates'),
+            function ($join) {
+                $join->on('dates.date', '=', DB::raw('DATE(payments.created_at)'));
+            }
+        )
+        ->selectRaw('dates.date, COALESCE(SUM(CASE WHEN payments.paytype IN ("course", "section") AND payments.pay = 1 THEN payments.amount ELSE 0 END), 0) as total_pay')
+        ->groupBy('dates.date')
+        ->orderBy('dates.date')
+        ->get();
         $payments->transform(function ($payment) {
                 $payment->date = Jalalian::forge($payment->date)->format('Y/m/d');
                 return $payment;
