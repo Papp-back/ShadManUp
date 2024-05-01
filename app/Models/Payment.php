@@ -20,7 +20,14 @@ class Payment extends Model
         'user_id', 'course_id', 'paytype', 'copoun_id','Amount', 'section_id', 'Authority','refId', 'StartPay', 'pay','desc','card'
     ];
 
-
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'pay' => 'integer', // Cast the 'pay' column to integer
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);
