@@ -36,6 +36,13 @@ class CourseSessionController extends Controller
  *         required=false,
  *         @OA\Schema(type="string")
  *     ),
+  *     @OA\Parameter(
+ *         name="section_id",
+ *         in="query",
+ *         description="filter by section id",
+ *         required=false,
+ *         @OA\Schema(type="integer")
+ *     ),
  *     @OA\Response(
  *         response=200,
  *         description="Success",
@@ -70,6 +77,7 @@ class CourseSessionController extends Controller
     $perPage = $request->input('per_page', 10);
     $page = $request->input('page', 1);
     $search = $request->input('search');
+    $section_id = $request->input('section_id');
     // Start building the query
     $query = CourseSession::query()->with('courseSection');
     if ($search) {
@@ -79,13 +87,20 @@ class CourseSessionController extends Controller
             
         });
     }
+    if ($section_id) {
+        $query->where('course_section_id', $section_id);
+    }
     $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
+    $section=null;
+    if ($section_id) {
+        $section=CourseSection::find($section_id);
+    }
     $transformedCourses = $courses->map(function ($course) {
         return $course->withJdateHuman();
     });
-    return jRWithPagination($courses, $transformedCourses, 200, true, '', []);
+    return jRWithPagination($courses,[$section,$transformedCourses], 200, true, '', []);
 }
 /**
  * @OA\Post(

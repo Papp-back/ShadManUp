@@ -4,6 +4,7 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller\admin;
 use Illuminate\Http\Request;
 use App\Models\CourseSection;
+use App\Models\Course;
 class CourseSectionController extends Controller
 {
     
@@ -32,6 +33,13 @@ class CourseSectionController extends Controller
  *         description="Search query",
  *         required=false,
  *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="course_id",
+ *         in="query",
+ *         description="filter by course id",
+ *         required=false,
+ *         @OA\Schema(type="integer")
  *     ),
  *     @OA\Response(
  *         response=200,
@@ -67,6 +75,7 @@ class CourseSectionController extends Controller
     $perPage = $request->input('per_page', 10);
     $page = $request->input('page', 1);
     $search = $request->input('search');
+    $course_id = $request->input('course_id');
     // Start building the query
     $query = CourseSection::query()->with('course')->withCount('sessions');
     if ($search) {
@@ -76,13 +85,21 @@ class CourseSectionController extends Controller
             
         });
     }
+    if ($course_id) {
+        $query->where('course_id', $course_id);
+    }
     $query->orderBy('id', 'desc');
     // Execute the query and paginate the results
     $courses = $query->paginate($perPage, ['*'], 'page', $page);
+    $course=null;
+    if ($course_id) {
+        $course=Course::find($course_id);
+    }
+    
     $transformedCourses = $courses->map(function ($course) {
         return $course->prettifyPrice()->withJdateHuman();
     });
-    return jRWithPagination($courses, $transformedCourses, 200, true, '', []);
+    return jRWithPagination($courses, [$course,$transformedCourses], 200, true, '', []);
 }
 /**
  * @OA\Post(
