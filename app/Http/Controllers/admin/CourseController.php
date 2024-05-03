@@ -106,13 +106,15 @@ class CourseController extends Controller
             $totalDurationMinutes = $course->sections[0]->sessions()->sum('duration_minutes'); // Sum duration_minutes
             $course->total_duration_time = convertToTime($totalDurationMinutes); // Convert to human-readable time
             if ($totalDurationMinutes) {
-               
+               if (isset($course->sections[$index]) && $course->sections[$index]->sessions) {
                 $course->sections[$index]->sessions->map(function ($session) {
                     // Convert duration_minutes to HH:MM:SS format
                     $session->duration_minutes = convertToTime($session->duration_minutes);
                     $session->file_size = formatFileSize($session->file_size);
                     return $session;
                 });
+               }
+                
             }
             $course->sections->each(function ($section) {
                 return $section->prettifyPrice();
