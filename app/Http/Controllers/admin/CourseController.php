@@ -243,11 +243,13 @@ if (isset($course->sections[0])) {
     $course->total_duration_time = convertToTime($totalDurationMinutes); // Convert to human-readable time
     if ($totalDurationMinutes) {
         $course->sections->map(function ($sec){
+           if ($sec->sessions) {
             $sec->sessions->map(function ($session) {
                 $session->duration_minutes = convertToTime($session->duration_minutes);
                 $session->file_size = formatFileSize($session->file_size);
                 return $session;
             });
+           }
         });
     }
     $course->sections->each(function ($section) {
